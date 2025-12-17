@@ -25,22 +25,26 @@
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eForm.region = region;
 
-    const f = $eForm as any;
+    // Preserve base fields when switching regions
+    const current = $eForm;
+    const base = {
+      email: current.email,
+      displayName: current.displayName,
+      locale: current.locale,
+      contact: current.contact,
+      favoriteGames: current.favoriteGames,
+      address: current.address
+    };
 
     if (region === UserRegion.EU) {
-      f.eu = { gdprConsent: false, vatId: '', nationalId: '' };
-      delete f.us; delete f.uk; delete f.other;
+      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
     } else if (region === UserRegion.US) {
-      f.us = { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false };
-      delete f.eu; delete f.uk; delete f.other;
+      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
     } else if (region === UserRegion.UK) {
-      f.uk = { county: '', postcode: '', ninLast4: '' };
-      delete f.eu; delete f.us; delete f.other;
+      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
     } else if (region === UserRegion.Other) {
-      f.other = { notes: '', timezone: '' };
-      delete f.eu; delete f.us; delete f.uk;
+      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
     }
   }
 
@@ -52,7 +56,7 @@
   }
 
   function removeGame(index: number) {
-    $eForm.favoriteGames = $eForm.favoriteGames.filter((_: any, i: number) => i !== index);
+    $eForm.favoriteGames = $eForm.favoriteGames.filter((_, i) => i !== index);
   }
 </script>
 
@@ -74,10 +78,10 @@
 
       <Field form={loginForm} name="email">
         <Control>
-            {#snippet children({ attrs })}
+            {#snippet children({ props })}
                 <Label class="block text-sm font-medium text-gray-700">Email</Label>
                 <input
-                  {...attrs}
+                  {...props}
                   type="email"
                   bind:value={$lForm.email}
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
@@ -89,10 +93,10 @@
 
       <Field form={loginForm} name="password">
         <Control>
-            {#snippet children({ attrs })}
+            {#snippet children({ props })}
                 <Label class="block text-sm font-medium text-gray-700">Password</Label>
                 <input
-                  {...attrs}
+                  {...props}
                   type="password"
                   bind:value={$lForm.password}
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
@@ -104,10 +108,10 @@
 
       <Field form={loginForm} name="rememberMe">
         <Control>
-            {#snippet children({ attrs })}
+            {#snippet children({ props })}
                 <div class="flex items-center">
                     <input
-                        {...attrs}
+                        {...props}
                         type="checkbox"
                         bind:checked={$lForm.rememberMe}
                         class="h-4 w-4 text-indigo-600 border-gray-300 rounded"
@@ -136,9 +140,9 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Field form={editUserForm} name="email">
             <Control>
-                {#snippet children({ attrs })}
+                {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Email</Label>
-                    <input {...attrs} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -146,9 +150,9 @@
 
         <Field form={editUserForm} name="displayName">
             <Control>
-                {#snippet children({ attrs })}
+                {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...attrs} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -156,9 +160,9 @@
 
         <Field form={editUserForm} name="locale">
              <Control>
-                {#snippet children({ attrs })}
+                {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...attrs} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -169,9 +173,9 @@
       <div class="border-t pt-4 space-y-2">
          <Field form={editUserForm} name="contact.channel">
              <Control>
-                {#snippet children({ attrs })}
+                {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Channel</Label>
-                    <select {...attrs} bind:value={$eForm.contact.channel} class="border p-2 w-full rounded">
+                    <select {...props} bind:value={$eForm.contact.channel} class="border p-2 w-full rounded">
                         <option value={ContactChannel.Email}>Email</option>
                         <option value={ContactChannel.Phone}>Phone</option>
                     </select>
@@ -182,9 +186,9 @@
          <div class="flex gap-4">
             <Field form={editUserForm} name="contact.marketingOptIn">
                 <Control>
-                    {#snippet children({ attrs })}
+                    {#snippet children({ props })}
                         <label class="flex items-center space-x-2">
-                            <input {...attrs} type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
+                            <input {...props} type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
                             <span class="text-sm">Marketing</span>
                         </label>
                     {/snippet}
@@ -192,9 +196,9 @@
             </Field>
             <Field form={editUserForm} name="contact.productUpdatesOptIn">
                 <Control>
-                    {#snippet children({ attrs })}
+                    {#snippet children({ props })}
                         <label class="flex items-center space-x-2">
-                            <input {...attrs} type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
+                            <input {...props} type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
                             <span class="text-sm">Product Updates</span>
                         </label>
                     {/snippet}
@@ -207,10 +211,10 @@
       <div class="border-t pt-4">
         <Field form={editUserForm} name="region">
             <Control>
-                {#snippet children({ attrs })}
+                {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Region</Label>
                     <select
-                        {...attrs}
+                        {...props}
                         value={$eForm.region}
                         onchange={onRegionChange}
                         class="border p-2 w-full rounded"
@@ -227,9 +231,9 @@
              {#if $eForm.region === UserRegion.EU && 'eu' in $eForm}
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
-                        {#snippet children({ attrs })}
+                        {#snippet children({ props })}
                             <label class="flex items-center space-x-2">
-                                <input {...attrs} type="checkbox" bind:checked={$eForm.eu.gdprConsent} />
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
                                 <span class="text-sm">GDPR Consent</span>
                             </label>
                         {/snippet}
@@ -238,18 +242,18 @@
                 </Field>
                 <Field form={editUserForm} name="eu.vatId">
                     <Control>
-                        {#snippet children({ attrs })}
+                        {#snippet children({ props })}
                             <Label class="block text-sm">VAT ID</Label>
-                            <input {...attrs} type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
              {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
                 <Field form={editUserForm} name="us.state">
                     <Control>
-                        {#snippet children({ attrs })}
+                        {#snippet children({ props })}
                             <Label class="block text-sm">State</Label>
-                            <select {...attrs} bind:value={$eForm.us.state} class="border p-1 w-full rounded">
+                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
                                 {#each Object.values(USState) as state}
                                     <option value={state}>{state}</option>
                                 {/each}
@@ -259,18 +263,18 @@
                 </Field>
                 <Field form={editUserForm} name="us.zipPlus4">
                     <Control>
-                        {#snippet children({ attrs })}
+                        {#snippet children({ props })}
                             <Label class="block text-sm">Zip+4</Label>
-                            <input {...attrs} type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
-                        {#snippet children({ attrs })}
+                        {#snippet children({ props })}
                             <Label class="block text-sm">Postcode</Label>
-                            <input {...attrs} type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
@@ -288,8 +292,8 @@
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
                         <Control>
-                            {#snippet children({ attrs })}
-                                <select {...attrs} bind:value={game.id} class="w-full p-1 border rounded">
+                            {#snippet children({ props })}
+                                <select {...props} bind:value={game.id} class="w-full p-1 border rounded">
                                     {#each AVAILABLE_GAMES as g}
                                         <option value={g.id}>{g.title}</option>
                                     {/each}
@@ -303,8 +307,8 @@
                     <div>
                      <Field form={editUserForm} name={`favoriteGames[${i}].favoriteSince`}>
                         <Control>
-                             {#snippet children({ attrs })}
-                                 <input {...attrs} type="date" bind:value={game.favoriteSince} class="p-1 border rounded text-sm" />
+                             {#snippet children({ props })}
+                                 <input {...props} type="date" bind:value={game.favoriteSince} class="p-1 border rounded text-sm" />
                              {/snippet}
                         </Control>
                      </Field>

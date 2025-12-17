@@ -25,31 +25,25 @@
   // Helper to handle region switching and initializing defaults for that region
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eForm.region = region;
 
-    // Reset specific fields to ensure schema validity
-    const f = $eForm as any;
+    const current = $eForm;
+    const base = {
+      email: current.email,
+      displayName: current.displayName,
+      locale: current.locale,
+      contact: current.contact,
+      favoriteGames: current.favoriteGames,
+      address: current.address
+    };
 
     if (region === UserRegion.EU) {
-      f.eu = { gdprConsent: false, vatId: '', nationalId: '' };
-      delete f.us;
-      delete f.uk;
-      delete f.other;
+      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
     } else if (region === UserRegion.US) {
-      f.us = { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false };
-      delete f.eu;
-      delete f.uk;
-      delete f.other;
+      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
     } else if (region === UserRegion.UK) {
-      f.uk = { county: '', postcode: '', ninLast4: '' };
-      delete f.eu;
-      delete f.us;
-      delete f.other;
+      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
     } else if (region === UserRegion.Other) {
-      f.other = { notes: '', timezone: '' };
-      delete f.eu;
-      delete f.us;
-      delete f.uk;
+      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
     }
   }
 
@@ -62,7 +56,7 @@
   }
 
   function removeGame(index: number) {
-    $eForm.favoriteGames = $eForm.favoriteGames.filter((_: any, i: number) => i !== index);
+    $eForm.favoriteGames = $eForm.favoriteGames.filter((_, i) => i !== index);
   }
 </script>
 

@@ -1,6 +1,6 @@
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { loginSchema, editUserSchema } from '$lib/schemas';
+import { loginSchema, editUserSchema, type EditUserSchema } from '$lib/schemas';
 import { fail } from '@sveltejs/kit';
 import { AuthMethod, UserRegion, ContactChannel } from '$lib/types';
 import type { Actions, PageServerLoad } from './$types';
@@ -27,9 +27,7 @@ export const load: PageServerLoad = async () => {
         vatId: '',
         nationalId: '',
       },
-      // Zod discriminated union types are distinct, but when passing defaults to superValidate
-      // for a union, we essentially provide one valid shape.
-    } as any // Cast to any because the union type inference for defaults can be tricky, but this matches the EU shape.
+    } as EditUserSchema
   });
 
   return { loginForm, editUserForm };
