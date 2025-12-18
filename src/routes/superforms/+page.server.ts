@@ -1,16 +1,16 @@
-import { superValidate, message } from 'sveltekit-superforms';
+import { superValidate, message, type SuperValidated } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { loginSchema, editUserSchema, type EditUserSchema } from '$lib/schemas';
+import { loginSchema, editUserSchema, type EditUserSchema, type LoginSchema } from '$lib/schemas';
 import { fail } from '@sveltejs/kit';
 import { AuthMethod, UserRegion, ContactChannel } from '$lib/types';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  const loginForm = await superValidate(zod(loginSchema));
+  const loginForm = (await superValidate(zod(loginSchema as any))) as SuperValidated<LoginSchema>;
 
   // Initialize Edit User form with default values for EU region
   // This ensures the form starts in a valid initial state for the UI
-  const editUserForm = await superValidate(zod(editUserSchema), {
+  const editUserForm = (await superValidate(zod(editUserSchema as any), {
     defaults: {
       email: '',
       displayName: '',
@@ -28,14 +28,14 @@ export const load: PageServerLoad = async () => {
         nationalId: '',
       },
     } as EditUserSchema
-  });
+  })) as SuperValidated<EditUserSchema>;
 
   return { loginForm, editUserForm };
 };
 
 export const actions: Actions = {
   login: async ({ request }) => {
-    const form = await superValidate(request, zod(loginSchema));
+    const form = (await superValidate(request, zod(loginSchema as any))) as SuperValidated<LoginSchema>;
 
     if (!form.valid) {
       return fail(400, { form });
@@ -51,7 +51,7 @@ export const actions: Actions = {
   },
 
   editUser: async ({ request }) => {
-    const form = await superValidate(request, zod(editUserSchema));
+    const form = (await superValidate(request, zod(editUserSchema as any))) as SuperValidated<EditUserSchema>;
 
     if (!form.valid) {
       return fail(400, { form });

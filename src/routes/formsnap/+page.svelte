@@ -13,12 +13,15 @@
 
   let { data }: { data: PageData } = $props();
 
+  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
+
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>);
+  const loginForm = superForm<LoginSchema>(initialLoginForm);
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
-  const editUserForm = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
+  const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;

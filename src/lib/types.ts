@@ -138,7 +138,7 @@ export type UserBaseFields = {
 export type FavoriteGamesField = Array<{
   id: GameId;
   /** Optional per-item preference */
-  favoriteSince?: ISODateString;
+  favoriteSince?: ISODateString | '';
   /** UI hint: maybe the user pinned it */
   pinned?: boolean;
 }>;
@@ -217,3 +217,14 @@ export type EditUserPatch = Partial<UserBaseFields> &
 export type EditUserFormResult =
   | { ok: true; user: UserSummary }
   | { ok: false; fieldErrors?: Record<string, string>; formError?: string };
+
+/**
+ * Helper type for form state that needs to hold fields for all regions
+ * to avoid type errors when accessing fields not currently active.
+ */
+export type EditUserFormState = UserBaseFields & {
+  eu?: EUUserFields;
+  us?: USUserFields;
+  uk?: UKUserFields;
+  other?: OtherRegionUserFields;
+};
