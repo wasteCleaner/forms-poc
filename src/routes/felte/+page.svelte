@@ -7,7 +7,8 @@
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { ActionData } from './$types';
@@ -19,12 +20,14 @@
     extend: validator({ schema: loginSchema }),
     initialValues: {
         method: AuthMethod.Password,
+        email: '',
+        password: '',
         rememberMe: false
     }
   });
 
   // --- Edit User Form ---
-  const { form: eForm, data: eData, errors: eErrors, addField, removeField, setFields } = createForm({
+  const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
     extend: validator({ schema: editUserSchema }),
     initialValues: {
       email: '',
@@ -41,7 +44,10 @@
         gdprConsent: false,
         vatId: '',
         nationalId: '',
-      }
+      },
+      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
+      uk: { county: '', postcode: '', ninLast4: '' },
+      other: { notes: '', timezone: '' }
     }
   });
 
@@ -66,11 +72,14 @@
   }
 
   function addGame() {
-    addField('favoriteGames', { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' });
+    $eData.favoriteGames = [
+      ...$eData.favoriteGames,
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
+    ];
   }
 
   function removeGame(index: number) {
-      removeField(`favoriteGames.${index}`);
+    $eData.favoriteGames = $eData.favoriteGames.filter((_, i) => i !== index);
   }
 </script>
 
@@ -96,8 +105,9 @@
       <input type="hidden" name="method" value={AuthMethod.Password} />
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <label for="l-email" class="block text-sm font-medium text-gray-700">Email</label>
         <input
+          id="l-email"
           type="email"
           name="email"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
@@ -106,8 +116,9 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <label for="l-password" class="block text-sm font-medium text-gray-700">Password</label>
         <input
+          id="l-password"
           type="password"
           name="password"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
@@ -117,11 +128,12 @@
 
       <div class="flex items-center">
         <input
+          id="l-rememberMe"
           type="checkbox"
           name="rememberMe"
           class="h-4 w-4 text-indigo-600 border-gray-300 rounded"
         />
-        <label class="ml-2 block text-sm text-gray-900">Remember me</label>
+        <label for="l-rememberMe" class="ml-2 block text-sm text-gray-900">Remember me</label>
       </div>
 
       <button
@@ -140,20 +152,20 @@
     <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium">Email</label>
-          <input type="email" name="email" class="border p-2 w-full rounded" />
+          <label for="e-email" class="block text-sm font-medium">Email</label>
+          <input id="e-email" type="email" name="email" class="border p-2 w-full rounded" />
           {#if $eErrors.email}<span class="text-red-600 text-xs">{$eErrors.email}</span>{/if}
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Display Name</label>
-          <input type="text" name="displayName" class="border p-2 w-full rounded" />
+          <label for="e-displayName" class="block text-sm font-medium">Display Name</label>
+          <input id="e-displayName" type="text" name="displayName" class="border p-2 w-full rounded" />
           {#if $eErrors.displayName}<span class="text-red-600 text-xs">{$eErrors.displayName}</span>{/if}
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Locale</label>
-          <input type="text" name="locale" class="border p-2 w-full rounded" />
+          <label for="e-locale" class="block text-sm font-medium">Locale</label>
+          <input id="e-locale" type="text" name="locale" class="border p-2 w-full rounded" />
            {#if $eErrors.locale}<span class="text-red-600 text-xs">{$eErrors.locale}</span>{/if}
         </div>
       </div>
@@ -183,8 +195,9 @@
 
       <!-- Region -->
       <div class="border-t pt-4">
-        <label class="block text-sm font-medium">Region</label>
+        <label for="e-region" class="block text-sm font-medium">Region</label>
         <select
+            id="e-region"
             name="region"
             onchange={onRegionChange}
             class="border p-2 w-full rounded"
@@ -201,24 +214,24 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if $eErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$eErrors.eu.gdprConsent}</span>{/if}
+                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
-                    <label class="block text-sm">VAT ID</label>
-                    <input type="text" name="eu.vatId" class="border p-1 w-full rounded" />
+                    <label for="eu-vatId" class="block text-sm">VAT ID</label>
+                    <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
 
-                    <label class="block text-sm">National ID</label>
-                    <input type="text" name="eu.nationalId" class="border p-1 w-full rounded" />
+                    <label for="eu-nationalId" class="block text-sm">National ID</label>
+                    <input id="eu-nationalId" type="text" name="eu.nationalId" class="border p-1 w-full rounded" />
                 </div>
             {:else if $eData.region === UserRegion.US}
                  <div class="space-y-2">
-                    <label class="block text-sm">State</label>
-                    <select name="us.state" class="border p-1 w-full rounded">
+                    <label for="us-state" class="block text-sm">State</label>
+                    <select id="us-state" name="us.state" class="border p-1 w-full rounded">
                         {#each Object.values(USState) as state}
                             <option value={state}>{state}</option>
                         {/each}
                     </select>
-                    <label class="block text-sm">Zip+4</label>
-                    <input type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
+                    <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
+                    <input id="us-zipPlus4" type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="us.taxResidencyConfirmed" />
                         <span class="text-sm">Tax Residency Confirmed</span>
@@ -226,11 +239,11 @@
                  </div>
             {:else if $eData.region === UserRegion.UK}
                  <div class="space-y-2">
-                    <label class="block text-sm">Postcode</label>
-                    <input type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if $eErrors.uk?.postcode}<span class="text-red-600 text-xs">{$eErrors.uk.postcode}</span>{/if}
-                    <label class="block text-sm">County</label>
-                    <input type="text" name="uk.county" class="border p-1 w-full rounded" />
+                    <label for="uk-postcode" class="block text-sm">Postcode</label>
+                    <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
+                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    <label for="uk-county" class="block text-sm">County</label>
+                    <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
             {/if}
         </div>
@@ -254,7 +267,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if $eErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$eErrors.favoriteGames[i].id}</span>{/if}
+                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">

@@ -14,11 +14,14 @@
 
   let { data }: { data: PageData } = $props();
 
+  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
+
   // --- Login Form ---
-  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>);
+  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
 
   // --- Edit User Form ---
-  const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
+  const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
     dataType: 'json'
   });
 
@@ -77,8 +80,9 @@
       <input type="hidden" name="method" value={AuthMethod.Password} />
 
       <div>
-        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <label for="l-email" class="block text-sm font-medium text-gray-700">Email</label>
         <input
+          id="l-email"
           type="email"
           name="email"
           bind:value={$lForm.email}
@@ -88,8 +92,9 @@
       </div>
 
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <label for="l-password" class="block text-sm font-medium text-gray-700">Password</label>
         <input
+          id="l-password"
           type="password"
           name="password"
           bind:value={$lForm.password}
@@ -100,12 +105,13 @@
 
       <div class="flex items-center">
         <input
+          id="l-rememberMe"
           type="checkbox"
           name="rememberMe"
           bind:checked={$lForm.rememberMe}
           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
         />
-        <label for="rememberMe" class="ml-2 block text-sm text-gray-900">Remember me</label>
+        <label for="l-rememberMe" class="ml-2 block text-sm text-gray-900">Remember me</label>
       </div>
 
       <button
@@ -131,8 +137,9 @@
       <!-- Base Fields -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <label for="e-email" class="block text-sm font-medium text-gray-700">Email</label>
           <input
+            id="e-email"
             type="email"
             bind:value={$eForm.email}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
@@ -141,8 +148,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">Display Name</label>
+          <label for="e-displayName" class="block text-sm font-medium text-gray-700">Display Name</label>
           <input
+            id="e-displayName"
             type="text"
             bind:value={$eForm.displayName}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
@@ -151,8 +159,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">Locale</label>
+          <label for="e-locale" class="block text-sm font-medium text-gray-700">Locale</label>
           <input
+            id="e-locale"
             type="text"
             bind:value={$eForm.locale}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
@@ -165,8 +174,8 @@
         <h3 class="text-lg font-medium mb-2">Contact Preferences</h3>
         <div class="grid grid-cols-1 gap-2">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Channel</label>
-                <select bind:value={$eForm.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                <label for="e-contact-channel" class="block text-sm font-medium text-gray-700">Channel</label>
+                <select id="e-contact-channel" bind:value={$eForm.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                     <option value={ContactChannel.Email}>Email</option>
                     <option value={ContactChannel.Phone}>Phone</option>
                 </select>
@@ -188,8 +197,9 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Region Details</h3>
         <div>
-            <label class="block text-sm font-medium text-gray-700">Region</label>
+            <label for="e-region" class="block text-sm font-medium text-gray-700">Region</label>
             <select
+                id="e-region"
                 value={$eForm.region}
                 onchange={onRegionChange}
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
@@ -210,24 +220,24 @@
                         </label>
                         {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
-                        <label class="block text-sm">VAT ID</label>
-                        <input type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
+                        <label for="eu-vatId" class="block text-sm">VAT ID</label>
+                        <input id="eu-vatId" type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
 
-                        <label class="block text-sm">National ID</label>
-                        <input type="text" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
+                        <label for="eu-nationalId" class="block text-sm">National ID</label>
+                        <input id="eu-nationalId" type="text" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.US}
                  {#if 'us' in $eForm}
                     <div class="space-y-2">
-                        <label class="block text-sm">State</label>
-                        <select bind:value={$eForm.us.state} class="border p-1 w-full rounded">
+                        <label for="us-state" class="block text-sm">State</label>
+                        <select id="us-state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
                             {#each Object.values(USState) as state}
                                 <option value={state}>{state}</option>
                             {/each}
                         </select>
-                        <label class="block text-sm">Zip+4</label>
-                        <input type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
+                        <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
+                        <input id="us-zipPlus4" type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
 
                         <label class="flex items-center space-x-2 mt-2">
                             <input type="checkbox" bind:checked={$eForm.us.taxResidencyConfirmed} />
@@ -238,19 +248,19 @@
             {:else if $eForm.region === UserRegion.UK}
                  {#if 'uk' in $eForm}
                     <div class="space-y-2">
-                        <label class="block text-sm">Postcode</label>
-                        <input type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
+                        <label for="uk-postcode" class="block text-sm">Postcode</label>
+                        <input id="uk-postcode" type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
                         {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
 
-                        <label class="block text-sm">County</label>
-                        <input type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
+                        <label for="uk-county" class="block text-sm">County</label>
+                        <input id="uk-county" type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.Other}
                  {#if 'other' in $eForm}
                     <div class="space-y-2">
-                        <label class="block text-sm">Notes</label>
-                        <textarea bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
+                        <label for="other-notes" class="block text-sm">Notes</label>
+                        <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
                     </div>
                  {/if}
             {/if}
