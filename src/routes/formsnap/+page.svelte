@@ -1,11 +1,13 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
+  import { type Writable } from 'svelte/store';
   import {
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
@@ -25,6 +27,9 @@
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
+
+  // Create a typed proxy for the form store to handle discriminated unions more cleanly in the template
+  const proxyForm = eForm as Writable<EditUserFormState>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -54,7 +59,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
@@ -231,12 +236,12 @@
         </Field>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-             {#if $eForm.region === UserRegion.EU && 'eu' in $eForm}
+             {#if $proxyForm.region === UserRegion.EU && $proxyForm.eu}
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
                         {#snippet children({ props })}
                             <label class="flex items-center space-x-2">
-                                <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
+                                <input {...props} type="checkbox" bind:checked={$proxyForm.eu!.gdprConsent} />
                                 <span class="text-sm">GDPR Consent</span>
                             </label>
                         {/snippet}
@@ -247,16 +252,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">VAT ID</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$proxyForm.eu!.vatId} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
+             {:else if $proxyForm.region === UserRegion.US && $proxyForm.us}
                 <Field form={editUserForm} name="us.state">
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">State</Label>
-                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
+                            <select {...props} bind:value={$proxyForm.us!.state} class="border p-1 w-full rounded">
                                 {#each Object.values(USState) as state}
                                     <option value={state}>{state}</option>
                                 {/each}
@@ -268,16 +273,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Zip+4</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$proxyForm.us!.zipPlus4} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
+             {:else if $proxyForm.region === UserRegion.UK && $proxyForm.uk}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Postcode</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$proxyForm.uk!.postcode} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
@@ -290,7 +295,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>

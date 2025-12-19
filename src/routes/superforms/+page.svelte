@@ -1,11 +1,13 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { type Writable, type Readable } from 'svelte/store';
   import {
     UserRegion,
     USState,
     ContactChannel,
     GamePlatform,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
@@ -24,6 +26,10 @@
   const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
     dataType: 'json'
   });
+
+  // Typed proxies for form and errors to handle discriminated unions cleanly
+  const proxyForm = eForm as Writable<EditUserFormState>;
+  const proxyErrors = eErrors as Readable<Record<string, any>>;
 
   // Helper to handle region switching and initializing defaults for that region
   function onRegionChange(event: Event) {
@@ -54,7 +60,7 @@
     // Add a new game entry
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
@@ -211,56 +217,56 @@
         </div>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-            {#if $eForm.region === UserRegion.EU}
-                 {#if 'eu' in $eForm}
+            {#if $proxyForm.region === UserRegion.EU}
+                 {#if $proxyForm.eu}
                     <div class="space-y-2">
                         <label class="flex items-center space-x-2">
-                            <input type="checkbox" bind:checked={$eForm.eu.gdprConsent} />
+                            <input type="checkbox" bind:checked={$proxyForm.eu!.gdprConsent} />
                             <span class="text-sm">GDPR Consent</span>
                         </label>
-                        {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                        {#if $proxyErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$proxyErrors.eu.gdprConsent}</span>{/if}
 
                         <label for="eu-vatId" class="block text-sm">VAT ID</label>
-                        <input id="eu-vatId" type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
+                        <input id="eu-vatId" type="text" bind:value={$proxyForm.eu!.vatId} class="border p-1 w-full rounded" />
 
                         <label for="eu-nationalId" class="block text-sm">National ID</label>
-                        <input id="eu-nationalId" type="text" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
+                        <input id="eu-nationalId" type="text" bind:value={$proxyForm.eu!.nationalId} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.US}
-                 {#if 'us' in $eForm}
+            {:else if $proxyForm.region === UserRegion.US}
+                 {#if $proxyForm.us}
                     <div class="space-y-2">
                         <label for="us-state" class="block text-sm">State</label>
-                        <select id="us-state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
+                        <select id="us-state" bind:value={$proxyForm.us!.state} class="border p-1 w-full rounded">
                             {#each Object.values(USState) as state}
                                 <option value={state}>{state}</option>
                             {/each}
                         </select>
                         <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
-                        <input id="us-zipPlus4" type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
+                        <input id="us-zipPlus4" type="text" bind:value={$proxyForm.us!.zipPlus4} class="border p-1 w-full rounded" />
 
                         <label class="flex items-center space-x-2 mt-2">
-                            <input type="checkbox" bind:checked={$eForm.us.taxResidencyConfirmed} />
+                            <input type="checkbox" bind:checked={$proxyForm.us!.taxResidencyConfirmed} />
                             <span class="text-sm">Tax Residency Confirmed</span>
                         </label>
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.UK}
-                 {#if 'uk' in $eForm}
+            {:else if $proxyForm.region === UserRegion.UK}
+                 {#if $proxyForm.uk}
                     <div class="space-y-2">
                         <label for="uk-postcode" class="block text-sm">Postcode</label>
-                        <input id="uk-postcode" type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
-                        {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                        <input id="uk-postcode" type="text" bind:value={$proxyForm.uk!.postcode} class="border p-1 w-full rounded" />
+                        {#if $proxyErrors.uk?.postcode}<span class="text-red-600 text-xs">{$proxyErrors.uk.postcode}</span>{/if}
 
                         <label for="uk-county" class="block text-sm">County</label>
-                        <input id="uk-county" type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
+                        <input id="uk-county" type="text" bind:value={$proxyForm.uk!.county} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.Other}
-                 {#if 'other' in $eForm}
+            {:else if $proxyForm.region === UserRegion.Other}
+                 {#if $proxyForm.other}
                     <div class="space-y-2">
                         <label for="other-notes" class="block text-sm">Notes</label>
-                        <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
+                        <textarea id="other-notes" bind:value={$proxyForm.other!.notes} class="border p-1 w-full rounded"></textarea>
                     </div>
                  {/if}
             {/if}
@@ -271,7 +277,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                         <select bind:value={game.id} class="w-full p-1 border rounded">
@@ -289,7 +295,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm hover:underline">Remove</button>
                 </div>
-                 {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                 {#if $proxyErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$proxyErrors.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
