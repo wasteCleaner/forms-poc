@@ -4,11 +4,12 @@
     UserRegion,
     USState,
     ContactChannel,
-    GamePlatform,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
+  import type { Writable } from 'svelte/store';
 
   import type { PageData } from './$types';
 
@@ -25,11 +26,13 @@
     dataType: 'json'
   });
 
+  const eFormUnified = eForm as unknown as Writable<EditUserFormState>;
+
   // Helper to handle region switching and initializing defaults for that region
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
 
-    const current = $eForm;
+    const current = $eFormUnified;
     const base = {
       email: current.email,
       displayName: current.displayName,
@@ -40,26 +43,26 @@
     };
 
     if (region === UserRegion.EU) {
-      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
+      $eFormUnified = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
     } else if (region === UserRegion.US) {
-      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
+      $eFormUnified = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
     } else if (region === UserRegion.UK) {
-      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
+      $eFormUnified = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
     } else if (region === UserRegion.Other) {
-      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
+      $eFormUnified = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
     }
   }
 
   function addGame() {
     // Add a new game entry
-    $eForm.favoriteGames = [
-      ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+    $eFormUnified.favoriteGames = [
+      ...$eFormUnified.favoriteGames,
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
   function removeGame(index: number) {
-    $eForm.favoriteGames = $eForm.favoriteGames.filter((_, i) => i !== index);
+    $eFormUnified.favoriteGames = $eFormUnified.favoriteGames.filter((_, i) => i !== index);
   }
 </script>
 
@@ -141,7 +144,7 @@
           <input
             id="e-email"
             type="email"
-            bind:value={$eForm.email}
+            bind:value={$eFormUnified.email}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
           {#if $eErrors.email}<span class="text-red-600 text-xs">{$eErrors.email}</span>{/if}
@@ -152,7 +155,7 @@
           <input
             id="e-displayName"
             type="text"
-            bind:value={$eForm.displayName}
+            bind:value={$eFormUnified.displayName}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
           {#if $eErrors.displayName}<span class="text-red-600 text-xs">{$eErrors.displayName}</span>{/if}
@@ -163,7 +166,7 @@
           <input
             id="e-locale"
             type="text"
-            bind:value={$eForm.locale}
+            bind:value={$eFormUnified.locale}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
            {#if $eErrors.locale}<span class="text-red-600 text-xs">{$eErrors.locale}</span>{/if}
@@ -175,18 +178,18 @@
         <div class="grid grid-cols-1 gap-2">
             <div>
                 <label for="e-contact-channel" class="block text-sm font-medium text-gray-700">Channel</label>
-                <select id="e-contact-channel" bind:value={$eForm.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                <select id="e-contact-channel" bind:value={$eFormUnified.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                     <option value={ContactChannel.Email}>Email</option>
                     <option value={ContactChannel.Phone}>Phone</option>
                 </select>
             </div>
             <div class="flex items-center space-x-4">
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
+                    <input type="checkbox" bind:checked={$eFormUnified.contact.marketingOptIn} />
                     <span class="text-sm">Marketing</span>
                 </label>
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
+                    <input type="checkbox" bind:checked={$eFormUnified.contact.productUpdatesOptIn} />
                     <span class="text-sm">Product Updates</span>
                 </label>
             </div>
@@ -200,7 +203,7 @@
             <label for="e-region" class="block text-sm font-medium text-gray-700">Region</label>
             <select
                 id="e-region"
-                value={$eForm.region}
+                value={$eFormUnified.region}
                 onchange={onRegionChange}
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             >
@@ -211,56 +214,57 @@
         </div>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-            {#if $eForm.region === UserRegion.EU}
-                 {#if 'eu' in $eForm}
+            {#if $eFormUnified.region === UserRegion.EU}
+                 {#if 'eu' in $eFormUnified}
                     <div class="space-y-2">
                         <label class="flex items-center space-x-2">
-                            <input type="checkbox" bind:checked={$eForm.eu.gdprConsent} />
+                            <input type="checkbox" bind:checked={$eFormUnified.eu!.gdprConsent} />
                             <span class="text-sm">GDPR Consent</span>
                         </label>
+                        <!-- Using explicit cast on errors because they follow the union structure which is hard to unify for discriminated unions -->
                         {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
                         <label for="eu-vatId" class="block text-sm">VAT ID</label>
-                        <input id="eu-vatId" type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
+                        <input id="eu-vatId" type="text" bind:value={$eFormUnified.eu!.vatId} class="border p-1 w-full rounded" />
 
                         <label for="eu-nationalId" class="block text-sm">National ID</label>
-                        <input id="eu-nationalId" type="text" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
+                        <input id="eu-nationalId" type="text" bind:value={$eFormUnified.eu!.nationalId} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.US}
-                 {#if 'us' in $eForm}
+            {:else if $eFormUnified.region === UserRegion.US}
+                 {#if 'us' in $eFormUnified}
                     <div class="space-y-2">
                         <label for="us-state" class="block text-sm">State</label>
-                        <select id="us-state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
+                        <select id="us-state" bind:value={$eFormUnified.us!.state} class="border p-1 w-full rounded">
                             {#each Object.values(USState) as state}
                                 <option value={state}>{state}</option>
                             {/each}
                         </select>
                         <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
-                        <input id="us-zipPlus4" type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
+                        <input id="us-zipPlus4" type="text" bind:value={$eFormUnified.us!.zipPlus4} class="border p-1 w-full rounded" />
 
                         <label class="flex items-center space-x-2 mt-2">
-                            <input type="checkbox" bind:checked={$eForm.us.taxResidencyConfirmed} />
+                            <input type="checkbox" bind:checked={$eFormUnified.us!.taxResidencyConfirmed} />
                             <span class="text-sm">Tax Residency Confirmed</span>
                         </label>
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.UK}
-                 {#if 'uk' in $eForm}
+            {:else if $eFormUnified.region === UserRegion.UK}
+                 {#if 'uk' in $eFormUnified}
                     <div class="space-y-2">
                         <label for="uk-postcode" class="block text-sm">Postcode</label>
-                        <input id="uk-postcode" type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
+                        <input id="uk-postcode" type="text" bind:value={$eFormUnified.uk!.postcode} class="border p-1 w-full rounded" />
                         {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
 
                         <label for="uk-county" class="block text-sm">County</label>
-                        <input id="uk-county" type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
+                        <input id="uk-county" type="text" bind:value={$eFormUnified.uk!.county} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
-            {:else if $eForm.region === UserRegion.Other}
-                 {#if 'other' in $eForm}
+            {:else if $eFormUnified.region === UserRegion.Other}
+                 {#if 'other' in $eFormUnified}
                     <div class="space-y-2">
                         <label for="other-notes" class="block text-sm">Notes</label>
-                        <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
+                        <textarea id="other-notes" bind:value={$eFormUnified.other!.notes} class="border p-1 w-full rounded"></textarea>
                     </div>
                  {/if}
             {/if}
@@ -271,7 +275,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eFormUnified.favoriteGames as game, i (game.key)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                         <select bind:value={game.id} class="w-full p-1 border rounded">
