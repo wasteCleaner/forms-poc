@@ -5,10 +5,12 @@
     USState,
     ContactChannel,
     GamePlatform,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
+  import type { Writable } from 'svelte/store';
 
   import type { PageData } from './$types';
 
@@ -21,32 +23,26 @@
   const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
 
   // --- Edit User Form ---
-  const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
+  const { form: eFormRaw, errors: eErrorsRaw, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
     dataType: 'json'
   });
+
+  const eForm = eFormRaw as Writable<EditUserFormState>;
+  const eErrors = eErrorsRaw as Writable<Record<string, any>>;
 
   // Helper to handle region switching and initializing defaults for that region
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
+    $eForm.region = region;
 
-    const current = $eForm;
-    const base = {
-      email: current.email,
-      displayName: current.displayName,
-      locale: current.locale,
-      contact: current.contact,
-      favoriteGames: current.favoriteGames,
-      address: current.address
-    };
-
-    if (region === UserRegion.EU) {
-      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
-    } else if (region === UserRegion.US) {
-      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
-    } else if (region === UserRegion.UK) {
-      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
-    } else if (region === UserRegion.Other) {
-      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
+    if (region === UserRegion.EU && !$eForm.eu) {
+       $eForm.eu = { gdprConsent: false, vatId: '', nationalId: '' };
+    } else if (region === UserRegion.US && !$eForm.us) {
+       $eForm.us = { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false };
+    } else if (region === UserRegion.UK && !$eForm.uk) {
+       $eForm.uk = { county: '', postcode: '', ninLast4: '' };
+    } else if (region === UserRegion.Other && !$eForm.other) {
+       $eForm.other = { notes: '', timezone: '' };
     }
   }
 
@@ -54,7 +50,7 @@
     // Add a new game entry
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
@@ -212,13 +208,13 @@
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
             {#if $eForm.region === UserRegion.EU}
-                 {#if 'eu' in $eForm}
+                 {#if $eForm.eu}
                     <div class="space-y-2">
                         <label class="flex items-center space-x-2">
                             <input type="checkbox" bind:checked={$eForm.eu.gdprConsent} />
                             <span class="text-sm">GDPR Consent</span>
                         </label>
-                        {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                        {#if $eErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$eErrors.eu.gdprConsent}</span>{/if}
 
                         <label for="eu-vatId" class="block text-sm">VAT ID</label>
                         <input id="eu-vatId" type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
@@ -228,7 +224,7 @@
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.US}
-                 {#if 'us' in $eForm}
+                 {#if $eForm.us}
                     <div class="space-y-2">
                         <label for="us-state" class="block text-sm">State</label>
                         <select id="us-state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
@@ -246,18 +242,18 @@
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.UK}
-                 {#if 'uk' in $eForm}
+                 {#if $eForm.uk}
                     <div class="space-y-2">
                         <label for="uk-postcode" class="block text-sm">Postcode</label>
                         <input id="uk-postcode" type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
-                        {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                        {#if $eErrors.uk?.postcode}<span class="text-red-600 text-xs">{$eErrors.uk.postcode}</span>{/if}
 
                         <label for="uk-county" class="block text-sm">County</label>
                         <input id="uk-county" type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.Other}
-                 {#if 'other' in $eForm}
+                 {#if $eForm.other}
                     <div class="space-y-2">
                         <label for="other-notes" class="block text-sm">Notes</label>
                         <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
@@ -289,7 +285,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm hover:underline">Remove</button>
                 </div>
-                 {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                 {#if $eErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$eErrors.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
