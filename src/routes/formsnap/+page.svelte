@@ -5,11 +5,13 @@
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
+  import type { Writable } from 'svelte/store';
 
   let { data }: { data: PageData } = $props();
 
@@ -24,37 +26,29 @@
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
     dataType: 'json'
   });
-  const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
+  const { form: eFormRaw, enhance: eEnhance, message: eMessage } = editUserForm;
+
+  const eForm = eFormRaw as Writable<EditUserFormState>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
+    $eForm.region = region;
 
-    // Preserve base fields when switching regions
-    const current = $eForm;
-    const base = {
-      email: current.email,
-      displayName: current.displayName,
-      locale: current.locale,
-      contact: current.contact,
-      favoriteGames: current.favoriteGames,
-      address: current.address
-    };
-
-    if (region === UserRegion.EU) {
-      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
-    } else if (region === UserRegion.US) {
-      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
-    } else if (region === UserRegion.UK) {
-      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
-    } else if (region === UserRegion.Other) {
-      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
+    if (region === UserRegion.EU && !$eForm.eu) {
+       $eForm.eu = { gdprConsent: false, vatId: '', nationalId: '' };
+    } else if (region === UserRegion.US && !$eForm.us) {
+       $eForm.us = { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false };
+    } else if (region === UserRegion.UK && !$eForm.uk) {
+       $eForm.uk = { county: '', postcode: '', ninLast4: '' };
+    } else if (region === UserRegion.Other && !$eForm.other) {
+       $eForm.other = { notes: '', timezone: '' };
     }
   }
 
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
@@ -231,12 +225,12 @@
         </Field>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-             {#if $eForm.region === UserRegion.EU && 'eu' in $eForm}
+             {#if $eForm.region === UserRegion.EU && $eForm.eu}
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
                         {#snippet children({ props })}
                             <label class="flex items-center space-x-2">
-                                <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
+                                <input {...props} type="checkbox" bind:checked={$eForm.eu!.gdprConsent} />
                                 <span class="text-sm">GDPR Consent</span>
                             </label>
                         {/snippet}
@@ -247,16 +241,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">VAT ID</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.eu!.vatId} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
+             {:else if $eForm.region === UserRegion.US && $eForm.us}
                 <Field form={editUserForm} name="us.state">
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">State</Label>
-                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
+                            <select {...props} bind:value={$eForm.us!.state} class="border p-1 w-full rounded">
                                 {#each Object.values(USState) as state}
                                     <option value={state}>{state}</option>
                                 {/each}
@@ -268,16 +262,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Zip+4</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.us!.zipPlus4} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
+             {:else if $eForm.region === UserRegion.UK && $eForm.uk}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Postcode</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.uk!.postcode} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
