@@ -5,15 +5,19 @@
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
+  import type { Writable } from 'svelte/store';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -25,6 +29,9 @@
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
+
+  // Cast store to Unified type to access all possible fields safely in template
+  const unifiedForm = eForm as unknown as Writable<EditUserFormState>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -54,7 +61,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
     ];
   }
 
@@ -141,35 +148,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="email">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Email</Label>
+                      <input {...props} type="email" bind:value={$unifiedForm.email} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="displayName">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Display Name</Label>
+                      <input {...props} type="text" bind:value={$unifiedForm.displayName} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="locale">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Locale</Label>
+                      <input {...props} type="text" bind:value={$unifiedForm.locale} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -178,7 +191,7 @@
              <Control>
                 {#snippet children({ props })}
                     <Label class="block text-sm font-medium">Channel</Label>
-                    <select {...props} bind:value={$eForm.contact.channel} class="border p-2 w-full rounded">
+                    <select {...props} bind:value={$unifiedForm.contact.channel} class="border p-2 w-full rounded">
                         <option value={ContactChannel.Email}>Email</option>
                         <option value={ContactChannel.Phone}>Phone</option>
                     </select>
@@ -191,7 +204,7 @@
                 <Control>
                     {#snippet children({ props })}
                         <label class="flex items-center space-x-2">
-                            <input {...props} type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
+                            <input {...props} type="checkbox" bind:checked={$unifiedForm.contact.marketingOptIn} />
                             <span class="text-sm">Marketing</span>
                         </label>
                     {/snippet}
@@ -201,7 +214,7 @@
                 <Control>
                     {#snippet children({ props })}
                         <label class="flex items-center space-x-2">
-                            <input {...props} type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
+                            <input {...props} type="checkbox" bind:checked={$unifiedForm.contact.productUpdatesOptIn} />
                             <span class="text-sm">Product Updates</span>
                         </label>
                     {/snippet}
@@ -218,7 +231,7 @@
                     <Label class="block text-sm font-medium">Region</Label>
                     <select
                         {...props}
-                        value={$eForm.region}
+                        value={$unifiedForm.region}
                         onchange={onRegionChange}
                         class="border p-2 w-full rounded"
                     >
@@ -231,12 +244,12 @@
         </Field>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-             {#if $eForm.region === UserRegion.EU && 'eu' in $eForm}
+             {#if $unifiedForm.region === UserRegion.EU && $unifiedForm.eu}
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
                         {#snippet children({ props })}
                             <label class="flex items-center space-x-2">
-                                <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
+                                <input {...props} type="checkbox" bind:checked={$unifiedForm.eu!.gdprConsent} />
                                 <span class="text-sm">GDPR Consent</span>
                             </label>
                         {/snippet}
@@ -247,16 +260,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">VAT ID</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$unifiedForm.eu!.vatId} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
+             {:else if $unifiedForm.region === UserRegion.US && $unifiedForm.us}
                 <Field form={editUserForm} name="us.state">
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">State</Label>
-                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
+                            <select {...props} bind:value={$unifiedForm.us!.state} class="border p-1 w-full rounded">
                                 {#each Object.values(USState) as state}
                                     <option value={state}>{state}</option>
                                 {/each}
@@ -268,16 +281,26 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Zip+4</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$unifiedForm.us!.zipPlus4} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
+                <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                            <label class="flex items-center space-x-2">
+                                <input {...props} type="checkbox" bind:checked={$unifiedForm.us!.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                </Field>
+             {:else if $unifiedForm.region === UserRegion.UK && $unifiedForm.uk}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Postcode</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$unifiedForm.uk!.postcode} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
@@ -290,7 +313,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $unifiedForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
