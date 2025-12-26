@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import {
     UserRegion,
     USState,
@@ -8,21 +9,27 @@
     AuthMethod
   } from '$lib/types';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
 
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
+  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema as any)
+  });
 
   // --- Edit User Form ---
   const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
 
   // Helper to handle region switching and initializing defaults for that region
