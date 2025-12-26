@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -9,20 +10,26 @@
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema as any)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
@@ -79,51 +86,57 @@
     <form method="POST" action="?/login" use:lEnhance class="space-y-4">
       <input type="hidden" name="method" value={AuthMethod.Password} />
 
+      <div class="form-control-wrapper">
       <Field form={loginForm} name="email">
-        <Control>
-            {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Email</Label>
-                <input
-                  {...props}
-                  type="email"
-                  bind:value={$lForm.email}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
-            {/snippet}
-        </Control>
-        <FieldErrors class="text-red-600 text-xs" />
-      </Field>
-
-      <Field form={loginForm} name="password">
-        <Control>
-            {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Password</Label>
-                <input
-                  {...props}
-                  type="password"
-                  bind:value={$lForm.password}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
-            {/snippet}
-        </Control>
-        <FieldErrors class="text-red-600 text-xs" />
-      </Field>
-
-      <Field form={loginForm} name="rememberMe">
-        <Control>
-            {#snippet children({ props })}
-                <div class="flex items-center">
+            <Control>
+                {#snippet children({ props })}
+                    <Label class="block text-sm font-medium text-gray-700">Email</Label>
                     <input
-                        {...props}
-                        type="checkbox"
-                        bind:checked={$lForm.rememberMe}
-                        class="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    {...props}
+                    type="email"
+                    bind:value={$lForm.email}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
                     />
-                    <Label class="ml-2 block text-sm text-gray-900">Remember me</Label>
-                </div>
-            {/snippet}
-        </Control>
-      </Field>
+                {/snippet}
+            </Control>
+            <FieldErrors class="text-red-600 text-xs" />
+        </Field>
+      </div>
+
+      <div class="form-control-wrapper">
+        <Field form={loginForm} name="password">
+            <Control>
+                {#snippet children({ props })}
+                    <Label class="block text-sm font-medium text-gray-700">Password</Label>
+                    <input
+                    {...props}
+                    type="password"
+                    bind:value={$lForm.password}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
+                    />
+                {/snippet}
+            </Control>
+            <FieldErrors class="text-red-600 text-xs" />
+        </Field>
+      </div>
+
+      <div class="form-control-wrapper">
+        <Field form={loginForm} name="rememberMe">
+            <Control>
+                {#snippet children({ props })}
+                    <div class="flex items-center">
+                        <input
+                            {...props}
+                            type="checkbox"
+                            bind:checked={$lForm.rememberMe}
+                            class="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                        />
+                        <Label class="ml-2 block text-sm text-gray-900">Remember me</Label>
+                    </div>
+                {/snippet}
+            </Control>
+        </Field>
+      </div>
 
       <button type="submit" class="py-2 px-4 bg-indigo-600 text-white rounded">Sign In</button>
     </form>
@@ -141,35 +154,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div class="form-control-wrapper">
+            <Field form={editUserForm} name="email">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Email</Label>
+                        <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div class="form-control-wrapper">
+            <Field form={editUserForm} name="displayName">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Display Name</Label>
+                        <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div class="form-control-wrapper">
+            <Field form={editUserForm} name="locale">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Locale</Label>
+                        <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -251,6 +270,14 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="eu.nationalId">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">National ID</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).eu.nationalId} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
                 <Field form={editUserForm} name="us.state">
                     <Control>
@@ -272,6 +299,24 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                             <label class="flex items-center space-x-2">
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).us.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="us.ssnLast4">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">SSN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).us.ssnLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
@@ -281,6 +326,39 @@
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
+                </Field>
+                <Field form={editUserForm} name="uk.county">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">County</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.county} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="uk.ninLast4">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">NIN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.ninLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+             {:else if $eForm.region === UserRegion.Other && 'other' in $eForm}
+                <Field form={editUserForm} name="other.notes">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Notes</Label>
+                            <textarea {...props} bind:value={($eForm as any).other.notes} class="border p-1 w-full rounded"></textarea>
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="other.timezone">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Timezone</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).other.timezone} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
                 </Field>
              {/if}
         </div>
