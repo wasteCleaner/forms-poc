@@ -12,6 +12,7 @@
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { ActionData } from './$types';
+  import type { Readable } from 'svelte/store';
 
   let { form: actionForm }: { form: ActionData } = $props();
 
@@ -27,6 +28,7 @@
   });
 
   // --- Edit User Form ---
+  // Define a unified type for the form data to handle discriminated unions
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
     extend: validator({ schema: editUserSchema }),
     initialValues: {
@@ -40,6 +42,7 @@
         productUpdatesOptIn: false,
       },
       favoriteGames: [],
+      // Initialize all possible union member fields to prevent runtime errors
       eu: {
         gdprConsent: false,
         vatId: '',
@@ -51,11 +54,23 @@
     }
   });
 
+  // Cast errors store to Readable<Record<string, any>> to avoid strict type errors with dynamic keys
+  const eErrorsAny = eErrors as unknown as Readable<Record<string, any>>;
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+    // Use setFields for discriminator to ensure reactivity
+    setFields('region', region);
 
     // Reset/Init fields for the new region
+    // Although we initialized them in initialValues, clearing others might be desired
+    // but with Discriminated Unions and Felte, keeping them is often safer unless we explicitly want to clear them.
+    // However, the original code was resetting them. I'll keep the reset logic but ensure it's safe.
+
+    // Note: In Felte/Svelte 5, direct store mutation ($eData.region = ...) usually works,
+    // but setFields is safer for triggering validation updates if needed.
+    // The original code used $eData.region = region;
+
     if (region === UserRegion.EU) {
         setFields('eu', { gdprConsent: false, vatId: '', nationalId: '' });
         setFields('us', undefined); setFields('uk', undefined); setFields('other', undefined);
@@ -72,10 +87,16 @@
   }
 
   function addGame() {
-    $eData.favoriteGames = [
-      ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
-    ];
+    // Explicitly add a key property for list rendering if needed,
+    // though Felte manages indices. The memory mentions adding a unique key.
+    const newGame = {
+        id: AVAILABLE_GAMES[0].id,
+        pinned: false,
+        favoriteSince: '',
+        key: Math.random().toString(36).substring(7)
+    };
+
+    $eData.favoriteGames = [...$eData.favoriteGames, newGame];
   }
 
   function removeGame(index: number) {
@@ -200,6 +221,7 @@
             id="e-region"
             name="region"
             onchange={onRegionChange}
+            value={$eData.region}
             class="border p-2 w-full rounded"
         >
             {#each Object.values(UserRegion) as region}
@@ -214,7 +236,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                    {#if $eErrorsAny.eu?.gdprConsent}<span class="text-red-600 text-xs">{$eErrorsAny.eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
@@ -241,7 +263,7 @@
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    {#if $eErrorsAny.uk?.postcode}<span class="text-red-600 text-xs">{$eErrorsAny.uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
@@ -253,7 +275,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
@@ -267,7 +289,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                {#if $eErrorsAny.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$eErrorsAny.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">
