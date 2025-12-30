@@ -141,6 +141,7 @@ export type FavoriteGamesField = Array<{
   favoriteSince?: ISODateString | '';
   /** UI hint: maybe the user pinned it */
   pinned?: boolean;
+  key?: string;
 }>;
 
 /** Region-specific dynamic fields */
