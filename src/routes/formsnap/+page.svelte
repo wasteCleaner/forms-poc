@@ -13,15 +13,14 @@
 
   let { data }: { data: PageData } = $props();
 
-  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
-  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
-
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  // svelte-ignore state_referenced_locally
+  const loginForm = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>);
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
-  const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
+  // svelte-ignore state_referenced_locally
+  const editUserForm = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
@@ -54,7 +53,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -290,7 +289,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
