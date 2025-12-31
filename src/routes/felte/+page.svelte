@@ -12,6 +12,7 @@
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { ActionData } from './$types';
+  import type { Readable } from 'svelte/store';
 
   let { form: actionForm }: { form: ActionData } = $props();
 
@@ -50,6 +51,9 @@
       other: { notes: '', timezone: '' }
     }
   });
+
+  // Cast errors to avoid strict type checking issues with nested/conditional fields
+  const castEErrors = eErrors as unknown as Readable<Record<string, any>>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -214,7 +218,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                    {#if $castEErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$castEErrors.eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
@@ -241,7 +245,7 @@
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    {#if $castEErrors.uk?.postcode}<span class="text-red-600 text-xs">{$castEErrors.uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
@@ -267,7 +271,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                {#if $castEErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$castEErrors.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">
