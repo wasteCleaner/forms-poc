@@ -6,7 +6,7 @@ import { AuthMethod, UserRegion, ContactChannel } from '$lib/types';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  const loginForm = (await superValidate(zod(loginSchema as any))) as SuperValidated<LoginSchema>;
+  const loginForm = (await superValidate(zod(loginSchema))) as SuperValidated<LoginSchema>;
 
   // Initialize Edit User form with default values for EU region
   // This ensures the form starts in a valid initial state for the UI
@@ -35,7 +35,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
   login: async ({ request }) => {
-    const form = (await superValidate(request, zod(loginSchema as any))) as SuperValidated<LoginSchema>;
+    const form = (await superValidate(request, zod(loginSchema))) as SuperValidated<LoginSchema>;
 
     if (!form.valid) {
       return fail(400, { form });

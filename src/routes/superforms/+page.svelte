@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import {
     UserRegion,
     USState,
@@ -7,22 +8,27 @@
     GamePlatform,
     AuthMethod
   } from '$lib/types';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
 
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
+  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema)
+  });
 
   // --- Edit User Form ---
   const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
 
   // Helper to handle region switching and initializing defaults for that region
@@ -54,7 +60,7 @@
     // Add a new game entry
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -271,20 +277,20 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
-                        <select bind:value={game.id} class="w-full p-1 border rounded">
+                        <select bind:value={game.id} name={`favoriteGames[${i}].id`} class="w-full p-1 border rounded">
                             {#each AVAILABLE_GAMES as g}
                                 <option value={g.id}>{g.title} ({g.platform})</option>
                             {/each}
                         </select>
                     </div>
                     <div>
-                        <input type="date" bind:value={game.favoriteSince} class="p-1 border rounded text-sm" placeholder="Since" />
+                        <input type="date" bind:value={game.favoriteSince} name={`favoriteGames[${i}].favoriteSince`} class="p-1 border rounded text-sm" placeholder="Since" />
                     </div>
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" bind:checked={game.pinned} />
+                        <input type="checkbox" bind:checked={game.pinned} name={`favoriteGames[${i}].pinned`} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm hover:underline">Remove</button>
