@@ -12,6 +12,7 @@
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { ActionData } from './$types';
+  import type { Readable } from 'svelte/store';
 
   let { form: actionForm }: { form: ActionData } = $props();
 
@@ -27,6 +28,7 @@
   });
 
   // --- Edit User Form ---
+  // Using a unified type for the form to handle discriminated unions more easily in the template
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
     extend: validator({ schema: editUserSchema }),
     initialValues: {
@@ -51,22 +53,48 @@
     }
   });
 
+  // Cast errors to a more flexible type to avoid template type errors with discriminated unions
+  const eErrorsAny = eErrors as Readable<Record<string, any>>;
+
+  // Local state to persist region-specific data when switching away
+  let regionState = {
+    [UserRegion.EU]: { gdprConsent: false, vatId: '', nationalId: '' },
+    [UserRegion.US]: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
+    [UserRegion.UK]: { county: '', postcode: '', ninLast4: '' },
+    [UserRegion.Other]: { notes: '', timezone: '' }
+  };
+
+  // Initialize regionState from initialValues (could be done via effect if we had server data loading)
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
+    const previousRegion = $eData.region;
+
+    // Save current region state
+    if (previousRegion === UserRegion.EU && $eData.eu) {
+        regionState[UserRegion.EU] = { ...$eData.eu };
+    } else if (previousRegion === UserRegion.US && $eData.us) {
+        regionState[UserRegion.US] = { ...$eData.us };
+    } else if (previousRegion === UserRegion.UK && $eData.uk) {
+        regionState[UserRegion.UK] = { ...$eData.uk };
+    } else if (previousRegion === UserRegion.Other && $eData.other) {
+        regionState[UserRegion.Other] = { ...$eData.other };
+    }
+
     $eData.region = region;
 
-    // Reset/Init fields for the new region
+    // Restore/Init fields for the new region
     if (region === UserRegion.EU) {
-        setFields('eu', { gdprConsent: false, vatId: '', nationalId: '' });
+        setFields('eu', { ...regionState[UserRegion.EU] });
         setFields('us', undefined); setFields('uk', undefined); setFields('other', undefined);
     } else if (region === UserRegion.US) {
-        setFields('us', { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false });
+        setFields('us', { ...regionState[UserRegion.US] });
         setFields('eu', undefined); setFields('uk', undefined); setFields('other', undefined);
     } else if (region === UserRegion.UK) {
-        setFields('uk', { county: '', postcode: '', ninLast4: '' });
+        setFields('uk', { ...regionState[UserRegion.UK] });
         setFields('eu', undefined); setFields('us', undefined); setFields('other', undefined);
     } else if (region === UserRegion.Other) {
-        setFields('other', { notes: '', timezone: '' });
+        setFields('other', { ...regionState[UserRegion.Other] });
         setFields('eu', undefined); setFields('us', undefined); setFields('uk', undefined);
     }
   }
@@ -74,7 +102,7 @@
   function addGame() {
     $eData.favoriteGames = [
       ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -214,7 +242,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                    {#if $eErrorsAny.eu?.gdprConsent}<span class="text-red-600 text-xs">{$eErrorsAny.eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
@@ -241,7 +269,7 @@
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    {#if $eErrorsAny.uk?.postcode}<span class="text-red-600 text-xs">{$eErrorsAny.uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
@@ -253,7 +281,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
@@ -267,7 +295,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                {#if $eErrorsAny.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$eErrorsAny.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">

@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -141,35 +143,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="email">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Email</Label>
+                        <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="displayName">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Display Name</Label>
+                        <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="locale">
+                 <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Locale</Label>
+                        <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
       </div>
 
       <!-- Contact -->
