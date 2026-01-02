@@ -3,6 +3,7 @@
   import { validator } from '@felte/validator-zod';
   import { enhance } from '$app/forms';
   import { loginSchema, editUserSchema } from '$lib/schemas';
+  import type { Readable } from 'svelte/store';
   import {
     UserRegion,
     USState,
@@ -16,7 +17,7 @@
   let { form: actionForm }: { form: ActionData } = $props();
 
   // --- Login Form ---
-  const { form: lForm, data: lData, errors: lErrors } = createForm({
+  const { form: lForm, data: lData, errors: lErrorsStore } = createForm({
     extend: validator({ schema: loginSchema }),
     initialValues: {
         method: AuthMethod.Password,
@@ -26,8 +27,10 @@
     }
   });
 
+  const lErrors = lErrorsStore as unknown as Readable<Record<string, any>>;
+
   // --- Edit User Form ---
-  const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
+  const { form: eForm, data: eData, errors: eErrorsStore, setFields } = createForm<EditUserFormState>({
     extend: validator({ schema: editUserSchema }),
     initialValues: {
       email: '',
@@ -50,6 +53,8 @@
       other: { notes: '', timezone: '' }
     }
   });
+
+  const eErrors = eErrorsStore as unknown as Readable<Record<string, any>>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -214,7 +219,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                    {#if $eErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$eErrors.eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
@@ -241,7 +246,7 @@
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    {#if $eErrors.uk?.postcode}<span class="text-red-600 text-xs">{$eErrors.uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
@@ -267,7 +272,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                {#if $eErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$eErrors.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">

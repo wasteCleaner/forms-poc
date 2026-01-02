@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -82,13 +84,15 @@
       <Field form={loginForm} name="email">
         <Control>
             {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Email</Label>
-                <input
-                  {...props}
-                  type="email"
-                  bind:value={$lForm.email}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
+                <div>
+                  <Label class="block text-sm font-medium text-gray-700">Email</Label>
+                  <input
+                    {...props}
+                    type="email"
+                    bind:value={$lForm.email}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
+                  />
+                </div>
             {/snippet}
         </Control>
         <FieldErrors class="text-red-600 text-xs" />
@@ -97,13 +101,15 @@
       <Field form={loginForm} name="password">
         <Control>
             {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Password</Label>
-                <input
-                  {...props}
-                  type="password"
-                  bind:value={$lForm.password}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
+              <div>
+                  <Label class="block text-sm font-medium text-gray-700">Password</Label>
+                  <input
+                    {...props}
+                    type="password"
+                    bind:value={$lForm.password}
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
+                  />
+              </div>
             {/snippet}
         </Control>
         <FieldErrors class="text-red-600 text-xs" />
@@ -144,8 +150,10 @@
         <Field form={editUserForm} name="email">
             <Control>
                 {#snippet children({ props })}
+                   <div>
                     <Label class="block text-sm font-medium">Email</Label>
                     <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                   </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -154,8 +162,10 @@
         <Field form={editUserForm} name="displayName">
             <Control>
                 {#snippet children({ props })}
+                   <div>
                     <Label class="block text-sm font-medium">Display Name</Label>
                     <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                   </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -164,8 +174,10 @@
         <Field form={editUserForm} name="locale">
              <Control>
                 {#snippet children({ props })}
+                  <div>
                     <Label class="block text-sm font-medium">Locale</Label>
                     <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                  </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
