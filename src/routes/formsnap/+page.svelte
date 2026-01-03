@@ -1,30 +1,40 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EditUserFormState
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
+  import type { Writable } from 'svelte/store';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema)
   });
-  const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
+  const { form, enhance: eEnhance, message: eMessage } = editUserForm;
+
+  const eForm = form as Writable<EditUserFormState>;
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -54,7 +64,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -141,35 +151,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="email">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Email</Label>
+                      <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="displayName">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Display Name</Label>
+                      <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="locale">
+               <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Locale</Label>
+                      <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -231,12 +247,12 @@
         </Field>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-             {#if $eForm.region === UserRegion.EU && 'eu' in $eForm}
+             {#if $eForm.region === UserRegion.EU}
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
                         {#snippet children({ props })}
                             <label class="flex items-center space-x-2">
-                                <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
+                                <input {...props} type="checkbox" bind:checked={$eForm.eu!.gdprConsent} />
                                 <span class="text-sm">GDPR Consent</span>
                             </label>
                         {/snippet}
@@ -247,16 +263,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">VAT ID</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.eu!.vatId} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
+             {:else if $eForm.region === UserRegion.US}
                 <Field form={editUserForm} name="us.state">
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">State</Label>
-                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
+                            <select {...props} bind:value={$eForm.us!.state} class="border p-1 w-full rounded">
                                 {#each Object.values(USState) as state}
                                     <option value={state}>{state}</option>
                                 {/each}
@@ -268,16 +284,16 @@
                     <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Zip+4</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.us!.zipPlus4} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                 </Field>
-             {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
+             {:else if $eForm.region === UserRegion.UK}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
                         {#snippet children({ props })}
                             <Label class="block text-sm">Postcode</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            <input {...props} type="text" bind:value={$eForm.uk!.postcode} class="border p-1 w-full rounded" />
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
@@ -290,7 +306,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
