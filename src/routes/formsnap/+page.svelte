@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -54,7 +56,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -282,6 +284,15 @@
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
                 </Field>
+             {:else if $eForm.region === UserRegion.Other && 'other' in $eForm}
+                <Field form={editUserForm} name="other.notes">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Notes</Label>
+                            <textarea {...props} bind:value={($eForm as any).other.notes} class="border p-1 w-full rounded"></textarea>
+                        {/snippet}
+                    </Control>
+                </Field>
              {/if}
         </div>
       </div>
@@ -290,7 +301,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
