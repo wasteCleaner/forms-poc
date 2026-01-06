@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -8,21 +9,23 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
-  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
-  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
-
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  // svelte-ignore state_referenced_locally
+  const loginForm = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
-  const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+  // svelte-ignore state_referenced_locally
+  const editUserForm = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
+    dataType: 'json',
+    validators: zodClient(editUserSchema)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
