@@ -28,7 +28,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -149,7 +149,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -173,13 +173,13 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Contact</h3>
         <div class="grid grid-cols-1 gap-2">
-             <label>
-                Channel
-                <select name="contact.channel" class="border p-2 w-full rounded">
+             <div>
+                <label for="contact-channel" class="block text-sm font-medium">Channel</label>
+                <select id="contact-channel" name="contact.channel" class="border p-2 w-full rounded">
                     <option value={ContactChannel.Email}>Email</option>
                     <option value={ContactChannel.Phone}>Phone</option>
                 </select>
-             </label>
+             </div>
              <div class="flex gap-4">
                 <label class="flex items-center space-x-2">
                     <input type="checkbox" name="contact.marketingOptIn" />

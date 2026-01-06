@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import {
     UserRegion,
     USState,
@@ -7,22 +8,24 @@
     GamePlatform,
     AuthMethod
   } from '$lib/types';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
 
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
-  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
-  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
-
   // --- Login Form ---
-  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
+  // svelte-ignore state_referenced_locally
+  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>, {
+    validators: zodClient(loginSchema)
+  });
 
   // --- Edit User Form ---
-  const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+  // svelte-ignore state_referenced_locally
+  const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
+    dataType: 'json',
+    validators: zodClient(editUserSchema)
   });
 
   // Helper to handle region switching and initializing defaults for that region
