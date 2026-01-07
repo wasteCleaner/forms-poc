@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -8,21 +9,30 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
-  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
-  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
+  // Fix reactivity: derive initial forms from props
+  // However, superForm expects an object, and normally we just pass data.form
+  // But since we are destructuring, let's just use data.form directly in superForm init
+  // Note: superForm initializes once. If data changes, we might want to update it, but usually for forms we care about the initial state.
+  // The warning was about accessing `data.loginForm` in the top level scope which is not reactive if `data` changes.
+  // But here we are initializing a store.
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  // svelte-ignore state_referenced_locally
+  const loginForm = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
-  const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+  // svelte-ignore state_referenced_locally
+  const editUserForm = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any) // Cast for discriminated union
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
@@ -54,7 +64,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -141,35 +151,42 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <!-- Wrap Field in div for Grid -->
+        <div>
+            <Field form={editUserForm} name="email">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Email</Label>
+                        <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="displayName">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Display Name</Label>
+                        <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="locale">
+                 <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Locale</Label>
+                        <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -290,7 +307,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
