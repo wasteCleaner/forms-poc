@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createForm } from 'felte';
   import { validator } from '@felte/validator-zod';
-  import { enhance } from '$app/forms';
   import { loginSchema, editUserSchema } from '$lib/schemas';
   import {
     UserRegion,
@@ -17,7 +16,7 @@
 
   // --- Login Form ---
   const { form: lForm, data: lData, errors: lErrors } = createForm({
-    extend: validator({ schema: loginSchema }),
+    extend: validator({ schema: loginSchema as any }),
     initialValues: {
         method: AuthMethod.Password,
         email: '',
@@ -28,7 +27,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -54,27 +53,13 @@
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
     $eData.region = region;
-
-    // Reset/Init fields for the new region
-    if (region === UserRegion.EU) {
-        setFields('eu', { gdprConsent: false, vatId: '', nationalId: '' });
-        setFields('us', undefined); setFields('uk', undefined); setFields('other', undefined);
-    } else if (region === UserRegion.US) {
-        setFields('us', { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false });
-        setFields('eu', undefined); setFields('uk', undefined); setFields('other', undefined);
-    } else if (region === UserRegion.UK) {
-        setFields('uk', { county: '', postcode: '', ninLast4: '' });
-        setFields('eu', undefined); setFields('us', undefined); setFields('other', undefined);
-    } else if (region === UserRegion.Other) {
-        setFields('other', { notes: '', timezone: '' });
-        setFields('eu', undefined); setFields('us', undefined); setFields('uk', undefined);
-    }
+    // We do NOT clear the other fields to prevent runtime errors with binding
   }
 
   function addGame() {
     $eData.favoriteGames = [
       ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -101,7 +86,7 @@
       </div>
     {/if}
 
-    <form use:lForm use:enhance method="POST" action="?/login" class="space-y-4">
+    <form use:lForm method="POST" action="?/login" class="space-y-4">
       <input type="hidden" name="method" value={AuthMethod.Password} />
 
       <div>
@@ -149,7 +134,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -253,7 +238,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
