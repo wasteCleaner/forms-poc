@@ -11,17 +11,21 @@
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
+  import { zodClient } from 'sveltekit-superforms/adapters';
+  import { loginSchema } from '$lib/schemas';
+
   let { data }: { data: PageData } = $props();
 
-  const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
-  const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
-
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  // svelte-ignore state_referenced_locally
+  const loginForm = superForm<LoginSchema>(data.loginForm as SuperValidated<LoginSchema>, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
-  const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
+  // svelte-ignore state_referenced_locally
+  const editUserForm = superForm<EditUserSchema>(data.editUserForm as SuperValidated<EditUserSchema>, {
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
