@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -82,13 +84,15 @@
       <Field form={loginForm} name="email">
         <Control>
             {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Email</Label>
-                <input
-                  {...props}
-                  type="email"
-                  bind:value={$lForm.email}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
+                <div>
+                    <Label class="block text-sm font-medium text-gray-700">Email</Label>
+                    <input
+                      {...props}
+                      type="email"
+                      bind:value={$lForm.email}
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
+                    />
+                </div>
             {/snippet}
         </Control>
         <FieldErrors class="text-red-600 text-xs" />
@@ -97,13 +101,15 @@
       <Field form={loginForm} name="password">
         <Control>
             {#snippet children({ props })}
-                <Label class="block text-sm font-medium text-gray-700">Password</Label>
-                <input
-                  {...props}
-                  type="password"
-                  bind:value={$lForm.password}
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
-                />
+                <div>
+                    <Label class="block text-sm font-medium text-gray-700">Password</Label>
+                    <input
+                      {...props}
+                      type="password"
+                      bind:value={$lForm.password}
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"
+                    />
+                </div>
             {/snippet}
         </Control>
         <FieldErrors class="text-red-600 text-xs" />
@@ -144,8 +150,10 @@
         <Field form={editUserForm} name="email">
             <Control>
                 {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    <div>
+                        <Label class="block text-sm font-medium">Email</Label>
+                        <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -154,8 +162,10 @@
         <Field form={editUserForm} name="displayName">
             <Control>
                 {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    <div>
+                        <Label class="block text-sm font-medium">Display Name</Label>
+                        <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -164,8 +174,10 @@
         <Field form={editUserForm} name="locale">
              <Control>
                 {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    <div>
+                        <Label class="block text-sm font-medium">Locale</Label>
+                        <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    </div>
                 {/snippet}
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
@@ -177,11 +189,13 @@
          <Field form={editUserForm} name="contact.channel">
              <Control>
                 {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Channel</Label>
-                    <select {...props} bind:value={$eForm.contact.channel} class="border p-2 w-full rounded">
-                        <option value={ContactChannel.Email}>Email</option>
-                        <option value={ContactChannel.Phone}>Phone</option>
-                    </select>
+                    <div>
+                        <Label class="block text-sm font-medium">Channel</Label>
+                        <select {...props} bind:value={$eForm.contact.channel} class="border p-2 w-full rounded">
+                            <option value={ContactChannel.Email}>Email</option>
+                            <option value={ContactChannel.Phone}>Phone</option>
+                        </select>
+                    </div>
                 {/snippet}
              </Control>
          </Field>
@@ -215,17 +229,19 @@
         <Field form={editUserForm} name="region">
             <Control>
                 {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Region</Label>
-                    <select
-                        {...props}
-                        value={$eForm.region}
-                        onchange={onRegionChange}
-                        class="border p-2 w-full rounded"
-                    >
-                        {#each Object.values(UserRegion) as region}
-                            <option value={region}>{region}</option>
-                        {/each}
-                    </select>
+                    <div>
+                        <Label class="block text-sm font-medium">Region</Label>
+                        <select
+                            {...props}
+                            value={$eForm.region}
+                            onchange={onRegionChange}
+                            class="border p-2 w-full rounded"
+                        >
+                            {#each Object.values(UserRegion) as region}
+                                <option value={region}>{region}</option>
+                            {/each}
+                        </select>
+                    </div>
                 {/snippet}
             </Control>
         </Field>
@@ -246,8 +262,10 @@
                 <Field form={editUserForm} name="eu.vatId">
                     <Control>
                         {#snippet children({ props })}
-                            <Label class="block text-sm">VAT ID</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            <div>
+                                <Label class="block text-sm">VAT ID</Label>
+                                <input {...props} type="text" bind:value={($eForm as any).eu.vatId} class="border p-1 w-full rounded" />
+                            </div>
                         {/snippet}
                     </Control>
                 </Field>
@@ -255,20 +273,24 @@
                 <Field form={editUserForm} name="us.state">
                     <Control>
                         {#snippet children({ props })}
-                            <Label class="block text-sm">State</Label>
-                            <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
-                                {#each Object.values(USState) as state}
-                                    <option value={state}>{state}</option>
-                                {/each}
-                            </select>
+                            <div>
+                                <Label class="block text-sm">State</Label>
+                                <select {...props} bind:value={($eForm as any).us.state} class="border p-1 w-full rounded">
+                                    {#each Object.values(USState) as state}
+                                        <option value={state}>{state}</option>
+                                    {/each}
+                                </select>
+                            </div>
                         {/snippet}
                     </Control>
                 </Field>
                 <Field form={editUserForm} name="us.zipPlus4">
                     <Control>
                         {#snippet children({ props })}
-                            <Label class="block text-sm">Zip+4</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            <div>
+                                <Label class="block text-sm">Zip+4</Label>
+                                <input {...props} type="text" bind:value={($eForm as any).us.zipPlus4} class="border p-1 w-full rounded" />
+                            </div>
                         {/snippet}
                     </Control>
                 </Field>
@@ -276,8 +298,10 @@
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
                         {#snippet children({ props })}
-                            <Label class="block text-sm">Postcode</Label>
-                            <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            <div>
+                                <Label class="block text-sm">Postcode</Label>
+                                <input {...props} type="text" bind:value={($eForm as any).uk.postcode} class="border p-1 w-full rounded" />
+                            </div>
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
@@ -296,11 +320,13 @@
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
                         <Control>
                             {#snippet children({ props })}
-                                <select {...props} bind:value={game.id} class="w-full p-1 border rounded">
-                                    {#each AVAILABLE_GAMES as g}
-                                        <option value={g.id}>{g.title}</option>
-                                    {/each}
-                                </select>
+                                <div>
+                                    <select {...props} bind:value={game.id} class="w-full p-1 border rounded">
+                                        {#each AVAILABLE_GAMES as g}
+                                            <option value={g.id}>{g.title}</option>
+                                        {/each}
+                                    </select>
+                                </div>
                             {/snippet}
                         </Control>
                         <FieldErrors class="text-red-600 text-xs" />
