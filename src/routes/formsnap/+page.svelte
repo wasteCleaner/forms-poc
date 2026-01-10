@@ -1,6 +1,7 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import {
     UserRegion,
     USState,
@@ -8,21 +9,26 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
@@ -54,7 +60,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -251,6 +257,14 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="eu.nationalId">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">National ID</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).eu.nationalId} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
                 <Field form={editUserForm} name="us.state">
                     <Control>
@@ -272,6 +286,16 @@
                         {/snippet}
                     </Control>
                 </Field>
+                 <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                            <label class="flex items-center space-x-2 mt-2">
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).us.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
@@ -282,6 +306,23 @@
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
                 </Field>
+                <Field form={editUserForm} name="uk.county">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">County</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.county} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+             {:else if $eForm.region === UserRegion.Other && 'other' in $eForm}
+                <Field form={editUserForm} name="other.notes">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Notes</Label>
+                            <textarea {...props} bind:value={($eForm as any).other.notes} class="border p-1 w-full rounded"></textarea>
+                        {/snippet}
+                    </Control>
+                </Field>
              {/if}
         </div>
       </div>
@@ -290,7 +331,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>

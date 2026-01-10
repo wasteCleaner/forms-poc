@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import {
     UserRegion,
     USState,
@@ -7,22 +8,27 @@
     GamePlatform,
     AuthMethod
   } from '$lib/types';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import { AVAILABLE_GAMES } from '$lib/data';
 
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm);
+  const { form: lForm, errors: lErrors, enhance: lEnhance, message: lMessage } = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema)
+  });
 
   // --- Edit User Form ---
   const { form: eForm, errors: eErrors, enhance: eEnhance, message: eMessage } = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema)
   });
 
   // Helper to handle region switching and initializing defaults for that region
@@ -54,7 +60,7 @@
     // Add a new game entry
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -86,6 +92,7 @@
           type="email"
           name="email"
           bind:value={$lForm.email}
+          aria-invalid={$lErrors.email ? 'true' : undefined}
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
         />
         {#if $lErrors.email}<span class="text-red-600 text-xs">{$lErrors.email}</span>{/if}
@@ -98,6 +105,7 @@
           type="password"
           name="password"
           bind:value={$lForm.password}
+          aria-invalid={$lErrors.password ? 'true' : undefined}
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
         />
         {#if $lErrors.password}<span class="text-red-600 text-xs">{$lErrors.password}</span>{/if}
@@ -141,7 +149,9 @@
           <input
             id="e-email"
             type="email"
+            name="email"
             bind:value={$eForm.email}
+            aria-invalid={$eErrors.email ? 'true' : undefined}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
           {#if $eErrors.email}<span class="text-red-600 text-xs">{$eErrors.email}</span>{/if}
@@ -152,6 +162,7 @@
           <input
             id="e-displayName"
             type="text"
+            name="displayName"
             bind:value={$eForm.displayName}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
@@ -163,6 +174,7 @@
           <input
             id="e-locale"
             type="text"
+            name="locale"
             bind:value={$eForm.locale}
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
           />
@@ -175,18 +187,18 @@
         <div class="grid grid-cols-1 gap-2">
             <div>
                 <label for="e-contact-channel" class="block text-sm font-medium text-gray-700">Channel</label>
-                <select id="e-contact-channel" bind:value={$eForm.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                <select id="e-contact-channel" name="contact.channel" bind:value={$eForm.contact.channel} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                     <option value={ContactChannel.Email}>Email</option>
                     <option value={ContactChannel.Phone}>Phone</option>
                 </select>
             </div>
             <div class="flex items-center space-x-4">
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
+                    <input type="checkbox" name="contact.marketingOptIn" bind:checked={$eForm.contact.marketingOptIn} />
                     <span class="text-sm">Marketing</span>
                 </label>
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
+                    <input type="checkbox" name="contact.productUpdatesOptIn" bind:checked={$eForm.contact.productUpdatesOptIn} />
                     <span class="text-sm">Product Updates</span>
                 </label>
             </div>
@@ -200,6 +212,7 @@
             <label for="e-region" class="block text-sm font-medium text-gray-700">Region</label>
             <select
                 id="e-region"
+                name="region"
                 value={$eForm.region}
                 onchange={onRegionChange}
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
@@ -215,32 +228,32 @@
                  {#if 'eu' in $eForm}
                     <div class="space-y-2">
                         <label class="flex items-center space-x-2">
-                            <input type="checkbox" bind:checked={$eForm.eu.gdprConsent} />
+                            <input type="checkbox" name="eu.gdprConsent" bind:checked={$eForm.eu.gdprConsent} />
                             <span class="text-sm">GDPR Consent</span>
                         </label>
                         {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
                         <label for="eu-vatId" class="block text-sm">VAT ID</label>
-                        <input id="eu-vatId" type="text" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
+                        <input id="eu-vatId" type="text" name="eu.vatId" bind:value={$eForm.eu.vatId} class="border p-1 w-full rounded" />
 
                         <label for="eu-nationalId" class="block text-sm">National ID</label>
-                        <input id="eu-nationalId" type="text" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
+                        <input id="eu-nationalId" type="text" name="eu.nationalId" bind:value={$eForm.eu.nationalId} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.US}
                  {#if 'us' in $eForm}
                     <div class="space-y-2">
                         <label for="us-state" class="block text-sm">State</label>
-                        <select id="us-state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
+                        <select id="us-state" name="us.state" bind:value={$eForm.us.state} class="border p-1 w-full rounded">
                             {#each Object.values(USState) as state}
                                 <option value={state}>{state}</option>
                             {/each}
                         </select>
                         <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
-                        <input id="us-zipPlus4" type="text" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
+                        <input id="us-zipPlus4" type="text" name="us.zipPlus4" bind:value={$eForm.us.zipPlus4} class="border p-1 w-full rounded" />
 
                         <label class="flex items-center space-x-2 mt-2">
-                            <input type="checkbox" bind:checked={$eForm.us.taxResidencyConfirmed} />
+                            <input type="checkbox" name="us.taxResidencyConfirmed" bind:checked={$eForm.us.taxResidencyConfirmed} />
                             <span class="text-sm">Tax Residency Confirmed</span>
                         </label>
                     </div>
@@ -249,18 +262,18 @@
                  {#if 'uk' in $eForm}
                     <div class="space-y-2">
                         <label for="uk-postcode" class="block text-sm">Postcode</label>
-                        <input id="uk-postcode" type="text" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
+                        <input id="uk-postcode" type="text" name="uk.postcode" bind:value={$eForm.uk.postcode} class="border p-1 w-full rounded" />
                         {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
 
                         <label for="uk-county" class="block text-sm">County</label>
-                        <input id="uk-county" type="text" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
+                        <input id="uk-county" type="text" name="uk.county" bind:value={$eForm.uk.county} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {:else if $eForm.region === UserRegion.Other}
                  {#if 'other' in $eForm}
                     <div class="space-y-2">
                         <label for="other-notes" class="block text-sm">Notes</label>
-                        <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
+                        <textarea id="other-notes" name="other.notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
                     </div>
                  {/if}
             {/if}
@@ -271,20 +284,20 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
-                        <select bind:value={game.id} class="w-full p-1 border rounded">
+                        <select name={`favoriteGames[${i}].id`} bind:value={game.id} class="w-full p-1 border rounded">
                             {#each AVAILABLE_GAMES as g}
                                 <option value={g.id}>{g.title} ({g.platform})</option>
                             {/each}
                         </select>
                     </div>
                     <div>
-                        <input type="date" bind:value={game.favoriteSince} class="p-1 border rounded text-sm" placeholder="Since" />
+                        <input type="date" name={`favoriteGames[${i}].favoriteSince`} bind:value={game.favoriteSince} class="p-1 border rounded text-sm" placeholder="Since" />
                     </div>
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" bind:checked={game.pinned} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} bind:checked={game.pinned} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm hover:underline">Remove</button>

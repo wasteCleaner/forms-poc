@@ -253,7 +253,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
