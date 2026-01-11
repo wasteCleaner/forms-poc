@@ -7,9 +7,9 @@
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod,
-    type EditUserFormState
+    AuthMethod
   } from '$lib/types';
+  import type { EditUserFormState } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { ActionData } from './$types';
 
@@ -28,7 +28,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -45,9 +45,6 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
     }
   });
 
@@ -214,7 +211,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
