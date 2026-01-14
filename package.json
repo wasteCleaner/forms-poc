@@ -54,6 +54,7 @@
 		"svelte-check": "^4.3.4",
 		"sveltekit-superforms": "^2.29.1",
 		"tailwindcss": "^4.1.17",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
 		"vite": "^7.2.6",

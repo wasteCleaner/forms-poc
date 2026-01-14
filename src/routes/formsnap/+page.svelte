@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -8,21 +9,26 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+      validators: zodClient(loginSchema as any)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
