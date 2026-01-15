@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -8,21 +9,26 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema as any)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
@@ -54,7 +60,7 @@
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -141,6 +147,7 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
         <Field form={editUserForm} name="email">
             <Control>
                 {#snippet children({ props })}
@@ -150,7 +157,9 @@
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
         </Field>
+        </div>
 
+        <div>
         <Field form={editUserForm} name="displayName">
             <Control>
                 {#snippet children({ props })}
@@ -160,7 +169,9 @@
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
         </Field>
+        </div>
 
+        <div>
         <Field form={editUserForm} name="locale">
              <Control>
                 {#snippet children({ props })}
@@ -170,6 +181,7 @@
             </Control>
             <FieldErrors class="text-red-600 text-xs" />
         </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -290,7 +302,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
