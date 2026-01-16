@@ -17,7 +17,7 @@
 
   // --- Login Form ---
   const { form: lForm, data: lData, errors: lErrors } = createForm({
-    extend: validator({ schema: loginSchema }),
+    extend: validator({ schema: loginSchema as any }),
     initialValues: {
         method: AuthMethod.Password,
         email: '',
@@ -28,7 +28,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -45,28 +45,36 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      us: undefined,
+      uk: undefined,
+      other: undefined,
     }
   });
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+    setFields('region', region);
 
     // Reset/Init fields for the new region
     if (region === UserRegion.EU) {
-        setFields('eu', { gdprConsent: false, vatId: '', nationalId: '' });
+        setFields('eu.gdprConsent', false);
+        setFields('eu.vatId', '');
+        setFields('eu.nationalId', '');
         setFields('us', undefined); setFields('uk', undefined); setFields('other', undefined);
     } else if (region === UserRegion.US) {
-        setFields('us', { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false });
+        setFields('us.state', USState.CA);
+        setFields('us.zipPlus4', '');
+        setFields('us.ssnLast4', '');
+        setFields('us.taxResidencyConfirmed', false);
         setFields('eu', undefined); setFields('uk', undefined); setFields('other', undefined);
     } else if (region === UserRegion.UK) {
-        setFields('uk', { county: '', postcode: '', ninLast4: '' });
+        setFields('uk.county', '');
+        setFields('uk.postcode', '');
+        setFields('uk.ninLast4', '');
         setFields('eu', undefined); setFields('us', undefined); setFields('other', undefined);
     } else if (region === UserRegion.Other) {
-        setFields('other', { notes: '', timezone: '' });
+        setFields('other.notes', '');
+        setFields('other.timezone', '');
         setFields('eu', undefined); setFields('us', undefined); setFields('uk', undefined);
     }
   }
@@ -148,6 +156,10 @@
   <!-- EDIT USER FORM -->
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
+
+    <!-- DEBUG -->
+    <pre data-testid="debug-errors" class="text-xs bg-gray-100 p-2 hidden">{JSON.stringify($eErrors, null, 2)}</pre>
+    <pre data-testid="debug-data" class="text-xs bg-gray-100 p-2 hidden">{JSON.stringify($eData, null, 2)}</pre>
 
     <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
