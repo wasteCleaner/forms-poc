@@ -2,6 +2,7 @@
   import { createForm } from 'felte';
   import { validator } from '@felte/validator-zod';
   import { enhance } from '$app/forms';
+  import type { Readable } from 'svelte/store';
   import { loginSchema, editUserSchema } from '$lib/schemas';
   import {
     UserRegion,
@@ -45,15 +46,17 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      us: undefined,
+      uk: undefined,
+      other: undefined
     }
   });
 
+  const safeErrors = eErrors as unknown as Readable<Record<string, any>>;
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+    setFields('region', region);
 
     // Reset/Init fields for the new region
     if (region === UserRegion.EU) {
@@ -74,7 +77,7 @@
   function addGame() {
     $eData.favoriteGames = [
       ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -214,7 +217,7 @@
                         <input type="checkbox" name="eu.gdprConsent" />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
-                    {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
+                    {#if $safeErrors.eu?.gdprConsent}<span class="text-red-600 text-xs">{$safeErrors.eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
                     <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
@@ -241,7 +244,7 @@
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
-                    {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
+                    {#if $safeErrors.uk?.postcode}<span class="text-red-600 text-xs">{$safeErrors.uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
                  </div>
@@ -253,7 +256,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
@@ -267,7 +270,7 @@
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
                 </div>
-                {#if ($eErrors as any).favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{($eErrors as any).favoriteGames[i].id}</span>{/if}
+                {#if $safeErrors.favoriteGames?.[i]?.id}<span class="text-red-600 text-xs block">{$safeErrors.favoriteGames[i].id}</span>{/if}
             {/each}
         </div>
         <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">
