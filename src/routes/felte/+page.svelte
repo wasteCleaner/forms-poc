@@ -26,9 +26,45 @@
     }
   });
 
+  // Custom validator to workaround discriminated union issues in @felte/validator-zod
+  function customValidator(values: any) {
+    const result = editUserSchema.safeParse(values);
+    if (result.success) return {};
+
+    const errors: Record<string, any> = {};
+
+    // Helper to set nested value
+    const setPath = (obj: any, path: (string | number)[], value: string) => {
+        let current = obj;
+        for (let i = 0; i < path.length; i++) {
+            const key = path[i];
+            if (i === path.length - 1) {
+                 if (!current[key]) {
+                    current[key] = value;
+                 } else {
+                    if (Array.isArray(current[key])) {
+                        current[key].push(value);
+                    } else {
+                        current[key] = [current[key], value];
+                    }
+                 }
+            } else {
+                if (!current[key]) current[key] = {};
+                current = current[key];
+            }
+        }
+    };
+
+    for (const issue of result.error.issues) {
+        setPath(errors, issue.path, issue.message);
+    }
+
+    return errors;
+  }
+
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    validate: customValidator,
     initialValues: {
       email: '',
       displayName: '',
@@ -44,10 +80,7 @@
         gdprConsent: false,
         vatId: '',
         nationalId: '',
-      },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      }
     }
   });
 
@@ -149,7 +182,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
