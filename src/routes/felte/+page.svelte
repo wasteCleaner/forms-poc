@@ -17,7 +17,7 @@
 
   // --- Login Form ---
   const { form: lForm, data: lData, errors: lErrors } = createForm({
-    extend: validator({ schema: loginSchema }),
+    extend: validator({ schema: loginSchema as any }),
     initialValues: {
         method: AuthMethod.Password,
         email: '',
@@ -27,8 +27,9 @@
   });
 
   // --- Edit User Form ---
+  // svelte-ignore state_referenced_locally
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -45,9 +46,9 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      us: undefined,
+      uk: undefined,
+      other: undefined
     }
   });
 
@@ -149,7 +150,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -209,6 +210,7 @@
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
             {#if $eData.region === UserRegion.EU}
+                {#if 'eu' in $eData}
                 <div class="space-y-2">
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="eu.gdprConsent" />
@@ -222,7 +224,9 @@
                     <label for="eu-nationalId" class="block text-sm">National ID</label>
                     <input id="eu-nationalId" type="text" name="eu.nationalId" class="border p-1 w-full rounded" />
                 </div>
+                {/if}
             {:else if $eData.region === UserRegion.US}
+                 {#if 'us' in $eData}
                  <div class="space-y-2">
                     <label for="us-state" class="block text-sm">State</label>
                     <select id="us-state" name="us.state" class="border p-1 w-full rounded">
@@ -232,19 +236,38 @@
                     </select>
                     <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
                     <input id="us-zipPlus4" type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
+
+                    <label for="us-ssnLast4" class="block text-sm">SSN Last 4</label>
+                    <input id="us-ssnLast4" type="text" name="us.ssnLast4" class="border p-1 w-full rounded" />
+
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="us.taxResidencyConfirmed" />
                         <span class="text-sm">Tax Residency Confirmed</span>
                     </label>
                  </div>
+                 {/if}
             {:else if $eData.region === UserRegion.UK}
+                 {#if 'uk' in $eData}
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
                     {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
+                    <label for="uk-ninLast4" class="block text-sm">NIN Last 4</label>
+                    <input id="uk-ninLast4" type="text" name="uk.ninLast4" class="border p-1 w-full rounded" />
                  </div>
+                 {/if}
+             {:else if $eData.region === UserRegion.Other}
+                 {#if 'other' in $eData}
+                 <div class="space-y-2">
+                    <label for="other-notes" class="block text-sm">Notes</label>
+                    <textarea id="other-notes" name="other.notes" class="border p-1 w-full rounded"></textarea>
+
+                    <label for="other-timezone" class="block text-sm">Timezone</label>
+                    <input id="other-timezone" type="text" name="other.timezone" class="border p-1 w-full rounded" />
+                 </div>
+                 {/if}
             {/if}
         </div>
       </div>
