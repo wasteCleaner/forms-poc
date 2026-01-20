@@ -27,6 +27,13 @@ export const load: PageServerLoad = async () => {
         vatId: '',
         nationalId: '',
       },
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        postalCode: '',
+        country: '',
+      },
     } as EditUserSchema
   })) as SuperValidated<EditUserSchema>;
 

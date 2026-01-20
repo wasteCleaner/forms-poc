@@ -17,7 +17,7 @@
 
   // --- Login Form ---
   const { form: lForm, data: lData, errors: lErrors } = createForm({
-    extend: validator({ schema: loginSchema }),
+    extend: validator({ schema: loginSchema as any }),
     initialValues: {
         method: AuthMethod.Password,
         email: '',
@@ -26,9 +26,11 @@
     }
   });
 
+  let localFavoriteGames = $state<any[]>([]);
+
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -44,16 +46,16 @@
         gdprConsent: false,
         vatId: '',
         nationalId: '',
-      },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      }
     }
   });
 
+  // Sync initial state if needed (though usually empty)
+  // $effect(() => { localFavoriteGames = $eData.favoriteGames; }); // This might create loops if bidirectional
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+    setFields('region', region);
 
     // Reset/Init fields for the new region
     if (region === UserRegion.EU) {
@@ -72,14 +74,15 @@
   }
 
   function addGame() {
-    $eData.favoriteGames = [
-      ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
-    ];
+    const newGame = { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() };
+    localFavoriteGames = [...localFavoriteGames, newGame];
+    // Sync to felte
+    setFields('favoriteGames', localFavoriteGames);
   }
 
   function removeGame(index: number) {
-    $eData.favoriteGames = $eData.favoriteGames.filter((_, i) => i !== index);
+     localFavoriteGames = localFavoriteGames.filter((_, i) => i !== index);
+     setFields('favoriteGames', localFavoriteGames);
   }
 </script>
 
@@ -149,7 +152,8 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <!-- Removed use:enhance to ensure client-side blocking works with Felte in this configuration -->
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -167,6 +171,32 @@
           <label for="e-locale" class="block text-sm font-medium">Locale</label>
           <input id="e-locale" type="text" name="locale" class="border p-2 w-full rounded" />
            {#if $eErrors.locale}<span class="text-red-600 text-xs">{$eErrors.locale}</span>{/if}
+        </div>
+      </div>
+
+      <div class="border-t pt-4">
+        <h3 class="text-lg font-medium mb-2">Address</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                 <label for="e-line1" class="block text-sm">Line 1</label>
+                 <input id="e-line1" name="address.line1" class="border p-2 w-full rounded" />
+                 {#if ($eErrors as any).address?.line1}<span class="text-red-600 text-xs">{($eErrors as any).address.line1}</span>{/if}
+            </div>
+             <div>
+                 <label for="e-city" class="block text-sm">City</label>
+                 <input id="e-city" name="address.city" class="border p-2 w-full rounded" />
+                  {#if ($eErrors as any).address?.city}<span class="text-red-600 text-xs">{($eErrors as any).address.city}</span>{/if}
+            </div>
+             <div>
+                 <label for="e-postalCode" class="block text-sm">Postal Code</label>
+                 <input id="e-postalCode" name="address.postalCode" class="border p-2 w-full rounded" />
+                  {#if ($eErrors as any).address?.postalCode}<span class="text-red-600 text-xs">{($eErrors as any).address.postalCode}</span>{/if}
+            </div>
+             <div>
+                 <label for="e-country" class="block text-sm">Country</label>
+                 <input id="e-country" name="address.country" class="border p-2 w-full rounded" />
+                  {#if ($eErrors as any).address?.country}<span class="text-red-600 text-xs">{($eErrors as any).address.country}</span>{/if}
+            </div>
         </div>
       </div>
 
@@ -253,16 +283,16 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each localFavoriteGames as game, i (game.key)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
-                    <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
+                    <select name={`favoriteGames[${i}].id`} bind:value={game.id} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
                             <option value={g.id}>{g.title}</option>
                         {/each}
                     </select>
-                    <input type="date" name={`favoriteGames.${i}.favoriteSince`} class="p-1 border rounded text-sm" />
+                    <input type="date" name={`favoriteGames[${i}].favoriteSince`} bind:value={game.favoriteSince} class="p-1 border rounded text-sm" />
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" name={`favoriteGames.${i}.pinned`} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} bind:checked={game.pinned} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
