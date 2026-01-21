@@ -141,35 +141,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="email">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Email</Label>
+                      <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="displayName">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Display Name</Label>
+                      <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="locale">
+               <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Locale</Label>
+                      <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -290,7 +296,7 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>

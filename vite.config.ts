@@ -2,9 +2,17 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
+import path from 'path';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+
+	resolve: {
+		alias: {
+			'zod/v3': 'zod',
+			'zod/v4/core': path.resolve(process.cwd(), 'src/lib/mocks/zod4.js')
+		}
+	},
 
 	test: {
 		expect: { requireAssertions: true },
