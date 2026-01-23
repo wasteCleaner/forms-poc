@@ -1,5 +1,6 @@
 <script lang="ts">
   import { superForm, type SuperValidated } from 'sveltekit-superforms';
+  import { zodClient } from 'sveltekit-superforms/adapters';
   import { Field, Control, Label, FieldErrors, Description } from 'formsnap';
   import {
     UserRegion,
@@ -8,21 +9,26 @@
     AuthMethod
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
-  import type { LoginSchema, EditUserSchema } from '$lib/schemas';
+  import { loginSchema, editUserSchema, type LoginSchema, type EditUserSchema } from '$lib/schemas';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
-  const loginForm = superForm<LoginSchema>(initialLoginForm);
+  const loginForm = superForm<LoginSchema>(initialLoginForm, {
+    validators: zodClient(loginSchema)
+  });
   const { form: lForm, enhance: lEnhance, message: lMessage } = loginForm;
 
   // --- Edit User Form ---
   const editUserForm = superForm<EditUserSchema>(initialEditUserForm, {
-    dataType: 'json'
+    dataType: 'json',
+    validators: zodClient(editUserSchema as any)
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
@@ -141,35 +147,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="email">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Email</Label>
+                      <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="displayName">
+              <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Display Name</Label>
+                      <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+          <Field form={editUserForm} name="locale">
+               <Control>
+                  {#snippet children({ props })}
+                      <Label class="block text-sm font-medium">Locale</Label>
+                      <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                  {/snippet}
+              </Control>
+              <FieldErrors class="text-red-600 text-xs" />
+          </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -190,20 +202,20 @@
             <Field form={editUserForm} name="contact.marketingOptIn">
                 <Control>
                     {#snippet children({ props })}
-                        <label class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2">
                             <input {...props} type="checkbox" bind:checked={$eForm.contact.marketingOptIn} />
-                            <span class="text-sm">Marketing</span>
-                        </label>
+                            <Label class="text-sm">Marketing</Label>
+                        </div>
                     {/snippet}
                 </Control>
             </Field>
             <Field form={editUserForm} name="contact.productUpdatesOptIn">
                 <Control>
                     {#snippet children({ props })}
-                        <label class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2">
                             <input {...props} type="checkbox" bind:checked={$eForm.contact.productUpdatesOptIn} />
-                            <span class="text-sm">Product Updates</span>
-                        </label>
+                            <Label class="text-sm">Product Updates</Label>
+                        </div>
                     {/snippet}
                 </Control>
             </Field>
@@ -235,10 +247,10 @@
                 <Field form={editUserForm} name="eu.gdprConsent">
                     <Control>
                         {#snippet children({ props })}
-                            <label class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2">
                                 <input {...props} type="checkbox" bind:checked={($eForm as any).eu.gdprConsent} />
-                                <span class="text-sm">GDPR Consent</span>
-                            </label>
+                                <Label class="text-sm">GDPR Consent</Label>
+                            </div>
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
