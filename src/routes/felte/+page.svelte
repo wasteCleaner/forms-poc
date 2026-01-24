@@ -74,7 +74,7 @@
   function addGame() {
     $eData.favoriteGames = [
       ...$eData.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: Math.random().toString(36).substring(7) }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -149,7 +149,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -253,16 +253,16 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
-                    <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
+                    <select name={`favoriteGames[${i}].id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
                             <option value={g.id}>{g.title}</option>
                         {/each}
                     </select>
-                    <input type="date" name={`favoriteGames.${i}.favoriteSince`} class="p-1 border rounded text-sm" />
+                    <input type="date" name={`favoriteGames[${i}].favoriteSince`} class="p-1 border rounded text-sm" />
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" name={`favoriteGames.${i}.pinned`} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
