@@ -45,9 +45,9 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      us: undefined,
+      uk: undefined,
+      other: undefined
     }
   });
 
@@ -149,7 +149,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>

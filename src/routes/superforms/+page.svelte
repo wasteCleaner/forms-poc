@@ -14,7 +14,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -261,6 +263,9 @@
                     <div class="space-y-2">
                         <label for="other-notes" class="block text-sm">Notes</label>
                         <textarea id="other-notes" bind:value={$eForm.other.notes} class="border p-1 w-full rounded"></textarea>
+
+                        <label for="other-timezone" class="block text-sm">Timezone</label>
+                        <input id="other-timezone" type="text" bind:value={$eForm.other.timezone} class="border p-1 w-full rounded" />
                     </div>
                  {/if}
             {/if}
