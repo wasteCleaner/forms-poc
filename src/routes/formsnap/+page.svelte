@@ -251,6 +251,14 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="eu.nationalId">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">National ID</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).eu.nationalId} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
                 <Field form={editUserForm} name="us.state">
                     <Control>
@@ -272,6 +280,25 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="us.ssnLast4">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">SSN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).us.ssnLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                            <label class="flex items-center space-x-2">
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).us.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                    <FieldErrors class="text-red-600 text-xs" />
+                </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
@@ -281,6 +308,22 @@
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
+                </Field>
+                <Field form={editUserForm} name="uk.county">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">County</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.county} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="uk.ninLast4">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">NIN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.ninLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
                 </Field>
              {/if}
         </div>

@@ -53,7 +53,7 @@
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+    setFields('region', region);
 
     // Reset/Init fields for the new region
     if (region === UserRegion.EU) {
@@ -149,7 +149,7 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -232,6 +232,8 @@
                     </select>
                     <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
                     <input id="us-zipPlus4" type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
+                    <label for="us-ssnLast4" class="block text-sm">SSN Last 4</label>
+                    <input id="us-ssnLast4" type="text" name="us.ssnLast4" class="border p-1 w-full rounded" />
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="us.taxResidencyConfirmed" />
                         <span class="text-sm">Tax Residency Confirmed</span>
@@ -244,6 +246,8 @@
                     {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
                     <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
+                    <label for="uk-ninLast4" class="block text-sm">NIN Last 4</label>
+                    <input id="uk-ninLast4" type="text" name="uk.ninLast4" class="border p-1 w-full rounded" />
                  </div>
             {/if}
         </div>
@@ -255,14 +259,14 @@
         <div class="space-y-2">
             {#each $eData.favoriteGames as game, i}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
-                    <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
+                    <select name={`favoriteGames[${i}].id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
                             <option value={g.id}>{g.title}</option>
                         {/each}
                     </select>
-                    <input type="date" name={`favoriteGames.${i}.favoriteSince`} class="p-1 border rounded text-sm" />
+                    <input type="date" name={`favoriteGames[${i}].favoriteSince`} class="p-1 border rounded text-sm" />
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" name={`favoriteGames.${i}.pinned`} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
