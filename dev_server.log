@@ -1,0 +1,26 @@
+
+> forms-poc@0.0.1 dev
+> vite dev
+
+5:18:16 AM [vite] (client) Forced re-optimization of dependencies
+
+  VITE v7.3.1  ready in 2470 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+5:18:41 AM [vite-plugin-svelte] src/routes/formsnap/+page.svelte:17:27 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:41 AM [vite-plugin-svelte] src/routes/formsnap/+page.svelte:18:30 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:41 AM [vite-plugin-svelte] src/routes/formsnap/+page.svelte:17:27 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:41 AM [vite-plugin-svelte] src/routes/formsnap/+page.svelte:18:30 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:42 AM [vite-plugin-svelte] src/routes/superforms/+page.svelte:18:27 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:42 AM [vite-plugin-svelte] src/routes/superforms/+page.svelte:19:30 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:42 AM [vite-plugin-svelte] src/routes/superforms/+page.svelte:18:27 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
+5:18:42 AM [vite-plugin-svelte] src/routes/superforms/+page.svelte:19:30 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally
