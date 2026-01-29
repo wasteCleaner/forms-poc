@@ -17,7 +17,7 @@
 
   // --- Login Form ---
   const { form: lForm, data: lData, errors: lErrors } = createForm({
-    extend: validator({ schema: loginSchema }),
+    extend: validator({ schema: loginSchema as any }),
     initialValues: {
         method: AuthMethod.Password,
         email: '',
@@ -28,7 +28,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -45,29 +45,54 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      // Do NOT initialize non-active union members
     }
   });
 
+  const regionCache = {
+    [UserRegion.EU]: { gdprConsent: false, vatId: '', nationalId: '' },
+    [UserRegion.US]: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
+    [UserRegion.UK]: { county: '', postcode: '', ninLast4: '' },
+    [UserRegion.Other]: { notes: '', timezone: '' }
+  };
+
+  let currentRegion = $state(UserRegion.EU);
+  let previousRegion = UserRegion.EU;
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-    $eData.region = region;
+
+    // Use locally tracked previous region to avoid race conditions with Felte store updates
+    const oldRegion = previousRegion;
+    previousRegion = region;
+    currentRegion = region;
+
+    // Save to cache
+    if (oldRegion === UserRegion.EU && $eData.eu) {
+        Object.assign(regionCache[UserRegion.EU], JSON.parse(JSON.stringify($eData.eu)));
+    } else if (oldRegion === UserRegion.US && $eData.us) {
+        Object.assign(regionCache[UserRegion.US], JSON.parse(JSON.stringify($eData.us)));
+    } else if (oldRegion === UserRegion.UK && $eData.uk) {
+        Object.assign(regionCache[UserRegion.UK], JSON.parse(JSON.stringify($eData.uk)));
+    } else if (oldRegion === UserRegion.Other && $eData.other) {
+        Object.assign(regionCache[UserRegion.Other], JSON.parse(JSON.stringify($eData.other)));
+    }
+
+    setFields('region', region);
 
     // Reset/Init fields for the new region
     if (region === UserRegion.EU) {
-        setFields('eu', { gdprConsent: false, vatId: '', nationalId: '' });
-        setFields('us', undefined); setFields('uk', undefined); setFields('other', undefined);
+        $eData.eu = { ...regionCache[UserRegion.EU] };
+        $eData.us = undefined; $eData.uk = undefined; $eData.other = undefined;
     } else if (region === UserRegion.US) {
-        setFields('us', { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false });
-        setFields('eu', undefined); setFields('uk', undefined); setFields('other', undefined);
+        $eData.us = { ...regionCache[UserRegion.US] };
+        $eData.eu = undefined; $eData.uk = undefined; $eData.other = undefined;
     } else if (region === UserRegion.UK) {
-        setFields('uk', { county: '', postcode: '', ninLast4: '' });
-        setFields('eu', undefined); setFields('us', undefined); setFields('other', undefined);
+        $eData.uk = { ...regionCache[UserRegion.UK] };
+        $eData.eu = undefined; $eData.us = undefined; $eData.other = undefined;
     } else if (region === UserRegion.Other) {
-        setFields('other', { notes: '', timezone: '' });
-        setFields('eu', undefined); setFields('us', undefined); setFields('uk', undefined);
+        $eData.other = { ...regionCache[UserRegion.Other] };
+        $eData.eu = undefined; $eData.us = undefined; $eData.uk = undefined;
     }
   }
 
@@ -149,7 +174,8 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    <!-- Removed use:enhance -->
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
@@ -199,6 +225,7 @@
         <select
             id="e-region"
             name="region"
+            value={currentRegion}
             onchange={onRegionChange}
             class="border p-2 w-full rounded"
         >
@@ -208,7 +235,7 @@
         </select>
 
         <div class="mt-4 p-4 bg-gray-50 rounded">
-            {#if $eData.region === UserRegion.EU}
+            {#if currentRegion === UserRegion.EU && $eData.eu}
                 <div class="space-y-2">
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="eu.gdprConsent" />
@@ -217,12 +244,12 @@
                     {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
-                    <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
+                    <input id="eu-vatId" type="text" name="eu.vatId" bind:value={($eData as any).eu.vatId} class="border p-1 w-full rounded" />
 
                     <label for="eu-nationalId" class="block text-sm">National ID</label>
                     <input id="eu-nationalId" type="text" name="eu.nationalId" class="border p-1 w-full rounded" />
                 </div>
-            {:else if $eData.region === UserRegion.US}
+            {:else if currentRegion === UserRegion.US && $eData.us}
                  <div class="space-y-2">
                     <label for="us-state" class="block text-sm">State</label>
                     <select id="us-state" name="us.state" class="border p-1 w-full rounded">
@@ -231,13 +258,13 @@
                         {/each}
                     </select>
                     <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
-                    <input id="us-zipPlus4" type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
+                    <input id="us-zipPlus4" type="text" name="us.zipPlus4" bind:value={($eData as any).us.zipPlus4} class="border p-1 w-full rounded" />
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" name="us.taxResidencyConfirmed" />
                         <span class="text-sm">Tax Residency Confirmed</span>
                     </label>
                  </div>
-            {:else if $eData.region === UserRegion.UK}
+            {:else if currentRegion === UserRegion.UK && $eData.uk}
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
                     <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
@@ -253,16 +280,16 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eData.favoriteGames as game, i}
+            {#each $eData.favoriteGames as game, i (game.key || i)}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
-                    <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
+                    <select name={`favoriteGames[${i}].id`} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
                             <option value={g.id}>{g.title}</option>
                         {/each}
                     </select>
-                    <input type="date" name={`favoriteGames.${i}.favoriteSince`} class="p-1 border rounded text-sm" />
+                    <input type="date" name={`favoriteGames[${i}].favoriteSince`} class="p-1 border rounded text-sm" />
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" name={`favoriteGames.${i}.pinned`} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
