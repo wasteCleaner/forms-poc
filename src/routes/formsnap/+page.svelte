@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -272,6 +274,16 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                            <label class="flex items-center space-x-2 mt-2">
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).us.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
@@ -281,6 +293,14 @@
                         {/snippet}
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
+                </Field>
+                <Field form={editUserForm} name="uk.county">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">County</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.county} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
                 </Field>
              {/if}
         </div>
