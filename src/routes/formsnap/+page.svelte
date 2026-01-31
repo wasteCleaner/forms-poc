@@ -13,7 +13,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -25,6 +27,13 @@
     dataType: 'json'
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
+
+  let regionCache: Record<UserRegion, any> = {
+    [UserRegion.EU]: { gdprConsent: false, vatId: '', nationalId: '' },
+    [UserRegion.US]: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
+    [UserRegion.UK]: { county: '', postcode: '', ninLast4: '' },
+    [UserRegion.Other]: { notes: '', timezone: '' }
+  };
 
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
@@ -40,14 +49,20 @@
       address: current.address
     };
 
+    // Save current region data to cache
+    if (current.region === UserRegion.EU && 'eu' in current) regionCache[UserRegion.EU] = { ...current.eu };
+    else if (current.region === UserRegion.US && 'us' in current) regionCache[UserRegion.US] = { ...current.us };
+    else if (current.region === UserRegion.UK && 'uk' in current) regionCache[UserRegion.UK] = { ...current.uk };
+    else if (current.region === UserRegion.Other && 'other' in current) regionCache[UserRegion.Other] = { ...current.other };
+
     if (region === UserRegion.EU) {
-      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
+      $eForm = { ...base, region: UserRegion.EU, eu: regionCache[UserRegion.EU] };
     } else if (region === UserRegion.US) {
-      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
+      $eForm = { ...base, region: UserRegion.US, us: regionCache[UserRegion.US] };
     } else if (region === UserRegion.UK) {
-      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
+      $eForm = { ...base, region: UserRegion.UK, uk: regionCache[UserRegion.UK] };
     } else if (region === UserRegion.Other) {
-      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
+      $eForm = { ...base, region: UserRegion.Other, other: regionCache[UserRegion.Other] };
     }
   }
 

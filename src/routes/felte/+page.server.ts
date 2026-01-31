@@ -9,13 +9,13 @@ export const actions: Actions = {
 
     // Simulate backend validation
     if (email === 'test@test.com' && password === '123321') {
-       return { success: true };
+       return { success: true, message: 'Login successful!' };
     }
     return fail(401, { error: 'Invalid credentials', email });
   },
 
   editUser: async () => {
      // Simulate success
-     return { success: true };
+     return { success: true, message: 'User updated successfully!' };
   }
 };

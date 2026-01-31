@@ -28,7 +28,7 @@
 
   // --- Edit User Form ---
   const { form: eForm, data: eData, errors: eErrors, setFields } = createForm<EditUserFormState>({
-    extend: validator({ schema: editUserSchema }),
+    extend: validator({ schema: editUserSchema as any }),
     initialValues: {
       email: '',
       displayName: '',
@@ -45,9 +45,9 @@
         vatId: '',
         nationalId: '',
       },
-      us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false },
-      uk: { county: '', postcode: '', ninLast4: '' },
-      other: { notes: '', timezone: '' }
+      us: undefined,
+      uk: undefined,
+      other: undefined
     }
   });
 
@@ -95,9 +95,9 @@
         {actionForm.error}
       </div>
     {/if}
-    {#if actionForm?.success}
+    {#if actionForm?.success && actionForm.message === 'Login successful!'}
        <div class="mb-4 p-3 rounded bg-green-100 text-green-800">
-        Login successful!
+        {actionForm.message}
       </div>
     {/if}
 
@@ -149,23 +149,29 @@
   <section class="border p-6 rounded-lg shadow-sm bg-white">
     <h2 class="text-xl font-semibold mb-4">Edit User Form</h2>
 
-    <form use:eForm use:enhance method="POST" action="?/editUser" class="space-y-6">
+    {#if actionForm?.success && actionForm.message === 'User updated successfully!'}
+       <div class="mb-4 p-3 rounded bg-green-100 text-green-800">
+        {actionForm.message}
+      </div>
+    {/if}
+
+    <form use:eForm method="POST" action="?/editUser" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="e-email" class="block text-sm font-medium">Email</label>
-          <input id="e-email" type="email" name="email" class="border p-2 w-full rounded" />
+          <input id="e-email" type="email" name="email" bind:value={$eData.email} class="border p-2 w-full rounded" />
           {#if $eErrors.email}<span class="text-red-600 text-xs">{$eErrors.email}</span>{/if}
         </div>
 
         <div>
           <label for="e-displayName" class="block text-sm font-medium">Display Name</label>
-          <input id="e-displayName" type="text" name="displayName" class="border p-2 w-full rounded" />
+          <input id="e-displayName" type="text" name="displayName" bind:value={$eData.displayName} class="border p-2 w-full rounded" />
           {#if $eErrors.displayName}<span class="text-red-600 text-xs">{$eErrors.displayName}</span>{/if}
         </div>
 
         <div>
           <label for="e-locale" class="block text-sm font-medium">Locale</label>
-          <input id="e-locale" type="text" name="locale" class="border p-2 w-full rounded" />
+          <input id="e-locale" type="text" name="locale" bind:value={$eData.locale} class="border p-2 w-full rounded" />
            {#if $eErrors.locale}<span class="text-red-600 text-xs">{$eErrors.locale}</span>{/if}
         </div>
       </div>
@@ -175,18 +181,18 @@
         <div class="grid grid-cols-1 gap-2">
              <label>
                 Channel
-                <select name="contact.channel" class="border p-2 w-full rounded">
+                <select name="contact.channel" bind:value={$eData.contact.channel} class="border p-2 w-full rounded">
                     <option value={ContactChannel.Email}>Email</option>
                     <option value={ContactChannel.Phone}>Phone</option>
                 </select>
              </label>
              <div class="flex gap-4">
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" name="contact.marketingOptIn" />
+                    <input type="checkbox" name="contact.marketingOptIn" bind:checked={$eData.contact.marketingOptIn} />
                     <span class="text-sm">Marketing</span>
                 </label>
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" name="contact.productUpdatesOptIn" />
+                    <input type="checkbox" name="contact.productUpdatesOptIn" bind:checked={$eData.contact.productUpdatesOptIn} />
                     <span class="text-sm">Product Updates</span>
                 </label>
              </div>
@@ -199,6 +205,7 @@
         <select
             id="e-region"
             name="region"
+            bind:value={$eData.region}
             onchange={onRegionChange}
             class="border p-2 w-full rounded"
         >
@@ -211,39 +218,39 @@
             {#if $eData.region === UserRegion.EU}
                 <div class="space-y-2">
                     <label class="flex items-center space-x-2">
-                        <input type="checkbox" name="eu.gdprConsent" />
+                        <input type="checkbox" name="eu.gdprConsent" bind:checked={($eData as any).eu.gdprConsent} />
                         <span class="text-sm">GDPR Consent</span>
                     </label>
                     {#if ($eErrors as any).eu?.gdprConsent}<span class="text-red-600 text-xs">{($eErrors as any).eu.gdprConsent}</span>{/if}
 
                     <label for="eu-vatId" class="block text-sm">VAT ID</label>
-                    <input id="eu-vatId" type="text" name="eu.vatId" class="border p-1 w-full rounded" />
+                    <input id="eu-vatId" type="text" name="eu.vatId" bind:value={($eData as any).eu.vatId} class="border p-1 w-full rounded" />
 
                     <label for="eu-nationalId" class="block text-sm">National ID</label>
-                    <input id="eu-nationalId" type="text" name="eu.nationalId" class="border p-1 w-full rounded" />
+                    <input id="eu-nationalId" type="text" name="eu.nationalId" bind:value={($eData as any).eu.nationalId} class="border p-1 w-full rounded" />
                 </div>
             {:else if $eData.region === UserRegion.US}
                  <div class="space-y-2">
                     <label for="us-state" class="block text-sm">State</label>
-                    <select id="us-state" name="us.state" class="border p-1 w-full rounded">
+                    <select id="us-state" name="us.state" bind:value={($eData as any).us.state} class="border p-1 w-full rounded">
                         {#each Object.values(USState) as state}
                             <option value={state}>{state}</option>
                         {/each}
                     </select>
                     <label for="us-zipPlus4" class="block text-sm">Zip+4</label>
-                    <input id="us-zipPlus4" type="text" name="us.zipPlus4" class="border p-1 w-full rounded" />
+                    <input id="us-zipPlus4" type="text" name="us.zipPlus4" bind:value={($eData as any).us.zipPlus4} class="border p-1 w-full rounded" />
                     <label class="flex items-center space-x-2">
-                        <input type="checkbox" name="us.taxResidencyConfirmed" />
+                        <input type="checkbox" name="us.taxResidencyConfirmed" bind:checked={($eData as any).us.taxResidencyConfirmed} />
                         <span class="text-sm">Tax Residency Confirmed</span>
                     </label>
                  </div>
             {:else if $eData.region === UserRegion.UK}
                  <div class="space-y-2">
                     <label for="uk-postcode" class="block text-sm">Postcode</label>
-                    <input id="uk-postcode" type="text" name="uk.postcode" class="border p-1 w-full rounded" />
+                    <input id="uk-postcode" type="text" name="uk.postcode" bind:value={($eData as any).uk.postcode} class="border p-1 w-full rounded" />
                     {#if ($eErrors as any).uk?.postcode}<span class="text-red-600 text-xs">{($eErrors as any).uk.postcode}</span>{/if}
                     <label for="uk-county" class="block text-sm">County</label>
-                    <input id="uk-county" type="text" name="uk.county" class="border p-1 w-full rounded" />
+                    <input id="uk-county" type="text" name="uk.county" bind:value={($eData as any).uk.county} class="border p-1 w-full rounded" />
                  </div>
             {/if}
         </div>
@@ -255,14 +262,14 @@
         <div class="space-y-2">
             {#each $eData.favoriteGames as game, i}
                 <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
-                    <select name={`favoriteGames.${i}.id`} class="w-full p-1 border rounded">
+                    <select name={`favoriteGames[${i}].id`} bind:value={game.id} class="w-full p-1 border rounded">
                          {#each AVAILABLE_GAMES as g}
                             <option value={g.id}>{g.title}</option>
                         {/each}
                     </select>
-                    <input type="date" name={`favoriteGames.${i}.favoriteSince`} class="p-1 border rounded text-sm" />
+                    <input type="date" name={`favoriteGames[${i}].favoriteSince`} bind:value={game.favoriteSince} class="p-1 border rounded text-sm" />
                     <label class="flex items-center space-x-1">
-                        <input type="checkbox" name={`favoriteGames.${i}.pinned`} />
+                        <input type="checkbox" name={`favoriteGames[${i}].pinned`} bind:checked={game.pinned} />
                         <span class="text-xs">Pinned</span>
                     </label>
                     <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
