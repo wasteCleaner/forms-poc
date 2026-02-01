@@ -1,23 +1,29 @@
-<div class="p-8 max-w-2xl mx-auto text-center space-y-8">
-  <h1 class="text-4xl font-bold text-gray-900">Svelte 5 Forms POC</h1>
-  <p class="text-lg text-gray-600">
-    Comparison of form libraries implemented with Svelte 5.
-  </p>
+<script lang="ts">
+	import { Button } from '$lib/components/ui';
+</script>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    <a href="/felte" class="block p-6 border rounded-lg hover:bg-indigo-50 hover:border-indigo-500 transition-colors">
-      <h2 class="text-2xl font-semibold text-indigo-700">Felte</h2>
-      <p class="mt-2 text-sm text-gray-500">Unstyled, store-based forms.</p>
-    </a>
+<div class="max-w-2xl mx-auto p-8">
+	<h1 class="text-3xl font-bold mb-4">Forms POC</h1>
+	<p class="text-muted mb-6">
+		Comparing <strong>sveltekit-superforms</strong> and <strong>felte</strong> form libraries for
+		SvelteKit.
+	</p>
 
-    <a href="/superforms" class="block p-6 border rounded-lg hover:bg-pink-50 hover:border-pink-500 transition-colors">
-      <h2 class="text-2xl font-semibold text-pink-700">Superforms</h2>
-      <p class="mt-2 text-sm text-gray-500">Robust, server-centric forms.</p>
-    </a>
+	<div class="space-y-4">
+		<div class="border rounded-lg p-4">
+			<h2 class="text-xl font-semibold mb-2">Login Form</h2>
+			<p class="text-muted mb-3">Simple email/password validation</p>
+			<a href="/login">
+				<Button>View Login Demo</Button>
+			</a>
+		</div>
 
-    <a href="/formsnap" class="block p-6 border rounded-lg hover:bg-orange-50 hover:border-orange-500 transition-colors">
-      <h2 class="text-2xl font-semibold text-orange-700">Formsnap</h2>
-      <p class="mt-2 text-sm text-gray-500">Accessible components for Superforms.</p>
-    </a>
-  </div>
+		<div class="border rounded-lg p-4">
+			<h2 class="text-xl font-semibold mb-2">Profile Form</h2>
+			<p class="text-muted mb-3">Complex form with dynamic skills array</p>
+			<a href="/profile">
+				<Button>View Profile Demo</Button>
+			</a>
+		</div>
+	</div>
 </div>
