@@ -5,7 +5,11 @@
     UserRegion,
     USState,
     ContactChannel,
-    AuthMethod
+    AuthMethod,
+    type EUUserFields,
+    type USUserFields,
+    type UKUserFields,
+    type OtherRegionUserFields
   } from '$lib/types';
   import { AVAILABLE_GAMES } from '$lib/data';
   import type { LoginSchema, EditUserSchema } from '$lib/schemas';
@@ -13,7 +17,9 @@
 
   let { data }: { data: PageData } = $props();
 
+  // svelte-ignore state_referenced_locally
   const initialLoginForm = data.loginForm as SuperValidated<LoginSchema>;
+  // svelte-ignore state_referenced_locally
   const initialEditUserForm = data.editUserForm as SuperValidated<EditUserSchema>;
 
   // --- Login Form ---
@@ -26,11 +32,30 @@
   });
   const { form: eForm, enhance: eEnhance, message: eMessage } = editUserForm;
 
+  type RegionCache = {
+    [UserRegion.EU]?: EUUserFields;
+    [UserRegion.US]?: USUserFields;
+    [UserRegion.UK]?: UKUserFields;
+    [UserRegion.Other]?: OtherRegionUserFields;
+  };
+
+  let regionCache: RegionCache = {};
+
   function onRegionChange(event: Event) {
     const region = (event.target as HTMLSelectElement).value as UserRegion;
-
-    // Preserve base fields when switching regions
     const current = $eForm;
+
+     // Cache current region data
+    if (current.region === UserRegion.EU && 'eu' in current) {
+        regionCache[UserRegion.EU] = { ...current.eu };
+    } else if (current.region === UserRegion.US && 'us' in current) {
+        regionCache[UserRegion.US] = { ...current.us };
+    } else if (current.region === UserRegion.UK && 'uk' in current) {
+        regionCache[UserRegion.UK] = { ...current.uk };
+    } else if (current.region === UserRegion.Other && 'other' in current) {
+        regionCache[UserRegion.Other] = { ...current.other };
+    }
+
     const base = {
       email: current.email,
       displayName: current.displayName,
@@ -41,20 +66,36 @@
     };
 
     if (region === UserRegion.EU) {
-      $eForm = { ...base, region: UserRegion.EU, eu: { gdprConsent: false, vatId: '', nationalId: '' } };
+      $eForm = {
+          ...base,
+          region: UserRegion.EU,
+          eu: regionCache[UserRegion.EU] || { gdprConsent: false, vatId: '', nationalId: '' }
+      };
     } else if (region === UserRegion.US) {
-      $eForm = { ...base, region: UserRegion.US, us: { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false } };
+      $eForm = {
+          ...base,
+          region: UserRegion.US,
+          us: regionCache[UserRegion.US] || { state: USState.CA, zipPlus4: '', ssnLast4: '', taxResidencyConfirmed: false }
+      };
     } else if (region === UserRegion.UK) {
-      $eForm = { ...base, region: UserRegion.UK, uk: { county: '', postcode: '', ninLast4: '' } };
+      $eForm = {
+          ...base,
+          region: UserRegion.UK,
+          uk: regionCache[UserRegion.UK] || { county: '', postcode: '', ninLast4: '' }
+      };
     } else if (region === UserRegion.Other) {
-      $eForm = { ...base, region: UserRegion.Other, other: { notes: '', timezone: '' } };
+      $eForm = {
+          ...base,
+          region: UserRegion.Other,
+          other: regionCache[UserRegion.Other] || { notes: '', timezone: '' }
+      };
     }
   }
 
   function addGame() {
     $eForm.favoriteGames = [
       ...$eForm.favoriteGames,
-      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '' }
+      { id: AVAILABLE_GAMES[0].id, pinned: false, favoriteSince: '', key: crypto.randomUUID() }
     ];
   }
 
@@ -141,35 +182,41 @@
 
     <form method="POST" action="?/editUser" use:eEnhance class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field form={editUserForm} name="email">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Email</Label>
-                    <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="email">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Email</Label>
+                        <input {...props} type="email" bind:value={$eForm.email} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="displayName">
-            <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Display Name</Label>
-                    <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="displayName">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Display Name</Label>
+                        <input {...props} type="text" bind:value={$eForm.displayName} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
 
-        <Field form={editUserForm} name="locale">
-             <Control>
-                {#snippet children({ props })}
-                    <Label class="block text-sm font-medium">Locale</Label>
-                    <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
-                {/snippet}
-            </Control>
-            <FieldErrors class="text-red-600 text-xs" />
-        </Field>
+        <div>
+            <Field form={editUserForm} name="locale">
+                <Control>
+                    {#snippet children({ props })}
+                        <Label class="block text-sm font-medium">Locale</Label>
+                        <input {...props} type="text" bind:value={$eForm.locale} class="border p-2 w-full rounded" />
+                    {/snippet}
+                </Control>
+                <FieldErrors class="text-red-600 text-xs" />
+            </Field>
+        </div>
       </div>
 
       <!-- Contact -->
@@ -251,6 +298,14 @@
                         {/snippet}
                     </Control>
                 </Field>
+                <Field form={editUserForm} name="eu.nationalId">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">National ID</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).eu.nationalId} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.US && 'us' in $eForm}
                 <Field form={editUserForm} name="us.state">
                     <Control>
@@ -272,6 +327,24 @@
                         {/snippet}
                     </Control>
                 </Field>
+                 <Field form={editUserForm} name="us.ssnLast4">
+                    <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">SSN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).us.ssnLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+                 <Field form={editUserForm} name="us.taxResidencyConfirmed">
+                    <Control>
+                        {#snippet children({ props })}
+                             <label class="flex items-center space-x-2">
+                                <input {...props} type="checkbox" bind:checked={($eForm as any).us.taxResidencyConfirmed} />
+                                <span class="text-sm">Tax Residency Confirmed</span>
+                            </label>
+                        {/snippet}
+                    </Control>
+                </Field>
              {:else if $eForm.region === UserRegion.UK && 'uk' in $eForm}
                 <Field form={editUserForm} name="uk.postcode">
                      <Control>
@@ -282,6 +355,39 @@
                     </Control>
                     <FieldErrors class="text-red-600 text-xs" />
                 </Field>
+                <Field form={editUserForm} name="uk.county">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">County</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.county} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+                 <Field form={editUserForm} name="uk.ninLast4">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">NIN Last 4</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).uk.ninLast4} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
+            {:else if $eForm.region === UserRegion.Other && 'other' in $eForm}
+                <Field form={editUserForm} name="other.notes">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Notes</Label>
+                            <textarea {...props} bind:value={($eForm as any).other.notes} class="border p-1 w-full rounded"></textarea>
+                        {/snippet}
+                    </Control>
+                </Field>
+                <Field form={editUserForm} name="other.timezone">
+                     <Control>
+                        {#snippet children({ props })}
+                            <Label class="block text-sm">Timezone</Label>
+                            <input {...props} type="text" bind:value={($eForm as any).other.timezone} class="border p-1 w-full rounded" />
+                        {/snippet}
+                    </Control>
+                </Field>
              {/if}
         </div>
       </div>
@@ -290,15 +396,15 @@
       <div class="border-t pt-4">
         <h3 class="text-lg font-medium mb-2">Favorite Games</h3>
         <div class="space-y-2">
-            {#each $eForm.favoriteGames as game, i}
-                <div class="flex items-center gap-2 border p-2 rounded bg-gray-50">
+            {#each $eForm.favoriteGames as game, i (game.key || i)}
+                <div class="flex items-center gap-2 border p-2 rounded bg-gray-50" data-testid="game-item">
                     <div class="flex-1">
                       <Field form={editUserForm} name={`favoriteGames[${i}].id`}>
                         <Control>
                             {#snippet children({ props })}
                                 <select {...props} bind:value={game.id} class="w-full p-1 border rounded">
                                     {#each AVAILABLE_GAMES as g}
-                                        <option value={g.id}>{g.title}</option>
+                                        <option value={g.id}>{g.title} ({g.platform})</option>
                                     {/each}
                                 </select>
                             {/snippet}
@@ -317,16 +423,27 @@
                      </Field>
                     </div>
 
-                    <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm">Remove</button>
+                    <label class="flex items-center space-x-1">
+                        <Field form={editUserForm} name={`favoriteGames[${i}].pinned`}>
+                             <Control>
+                                 {#snippet children({ props })}
+                                     <input {...props} type="checkbox" bind:checked={game.pinned} />
+                                 {/snippet}
+                             </Control>
+                        </Field>
+                        <span class="text-xs">Pinned</span>
+                    </label>
+
+                    <button type="button" onclick={() => removeGame(i)} class="text-red-600 text-sm hover:underline">Remove</button>
                 </div>
             {/each}
         </div>
-        <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium">
+        <button type="button" onclick={addGame} class="mt-2 text-sm text-indigo-600 font-medium hover:text-indigo-800">
             + Add Game
         </button>
       </div>
 
-      <button type="submit" class="w-full py-2 bg-green-600 text-white rounded">Save Changes</button>
+      <button type="submit" class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700">Save Changes</button>
     </form>
   </section>
 </div>

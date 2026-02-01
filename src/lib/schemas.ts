@@ -30,6 +30,7 @@ const favoriteGameSchema = z.object({
   id: z.string().min(1, 'Game ID is required'),
   favoriteSince: isoDateSchema.optional().or(z.literal('')),
   pinned: z.boolean().optional(),
+  key: z.string().optional(),
 });
 
 const baseFields = {
