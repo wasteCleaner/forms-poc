@@ -1,23 +1,26 @@
 import type { Actions, PageServerLoad } from './$types';
-import { superValidate, fail } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
+import { superValidate, fail, message } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
 import { loginSchema } from '$lib/schemas';
 
+import { type LoginData } from '$lib/schemas';
+import type { SuperValidated } from 'sveltekit-superforms';
+
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(zod4(loginSchema));
+	const form = (await superValidate(zod(loginSchema as any))) as SuperValidated<LoginData>;
 	return { form };
 };
 
 export const actions: Actions = {
 	superforms: async ({ request }) => {
-		const form = await superValidate(request, zod4(loginSchema));
+		const form = (await superValidate(request, zod(loginSchema as any))) as SuperValidated<LoginData>;
 
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		console.log('[Superforms] Login submitted:', form.data);
-		return { form, success: true };
+		return message(form, 'Login successful');
 	},
 
 	felte: async ({ request }) => {
