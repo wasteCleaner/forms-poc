@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { loginSchema, type LoginData } from '$lib/schemas';
 	import { Button, Input, Label } from '$lib/components/ui';
 
@@ -11,12 +11,16 @@
 
 	let { data }: Props = $props();
 
-	const { form, errors, enhance, submitting } = superForm(data, {
-		validators: zod4Client(loginSchema)
+	// svelte-ignore state_referenced_locally
+	const { form, errors, enhance, submitting, message } = superForm(data, {
+		validators: zodClient(loginSchema as any)
 	});
 </script>
 
 <form method="POST" action="?/superforms" use:enhance class="space-y-4">
+	{#if $message}
+		<div class="text-green-500 font-medium">{$message}</div>
+	{/if}
 	<div class="space-y-2">
 		<Label for="sf-email">Email</Label>
 		<Input id="sf-email" type="email" name="email" bind:value={$form.email} />

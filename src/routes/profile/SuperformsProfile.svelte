@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { profileSchema, skillSchema, type ProfileData, type Skill } from '$lib/schemas';
 	import { Button, Input, Label, Select } from '$lib/components/ui';
 
@@ -11,8 +11,9 @@
 
 	let { data }: Props = $props();
 
-	const { form, errors, enhance, submitting } = superForm(data, {
-		validators: zod4Client(profileSchema),
+	// svelte-ignore state_referenced_locally
+	const { form, errors, enhance, submitting, message } = superForm(data, {
+		validators: zodClient(profileSchema as any),
 		dataType: 'json'
 	});
 
@@ -58,6 +59,9 @@
 </script>
 
 <form method="POST" action="?/superforms" use:enhance class="space-y-4">
+	{#if $message}
+		<div class="text-green-500 font-medium">{$message}</div>
+	{/if}
 	<div class="space-y-2">
 		<Label for="sf-gender">Gender</Label>
 		<Select id="sf-gender" name="gender" bind:value={$form.gender}>

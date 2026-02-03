@@ -1,0 +1,25 @@
+
+> forms-poc@0.0.1 preview
+> vite preview --port 4173
+
+  ➜  Local:   http://localhost:4173/
+  ➜  Network: use --host to expose
+[Superforms] Login submitted: { email: 'test@test.com', password: '123321' }
+[Felte] Profile submitted: {
+  gender: 'male',
+  age: 30,
+  skills: [
+    { name: 'JavaScript', level: 'professional' },
+    { name: 'TypeScript', level: 'experienced' },
+    { name: 'VisualCheck', level: 'expert' }
+  ]
+}
+[Felte] Profile submitted: {
+  gender: 'male',
+  age: 30,
+  skills: [
+    { name: 'JavaScript', level: 'professional' },
+    { name: 'TypeScript', level: 'experienced' },
+    { name: 'VisualCheck', level: 'expert' }
+  ]
+}

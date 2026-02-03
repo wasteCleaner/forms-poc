@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import SuperformsLogin from './SuperformsLogin.svelte';
 	import FelteLogin from './FelteLogin.svelte';
 

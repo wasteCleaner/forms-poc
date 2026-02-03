@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { createForm } from 'felte';
+	import { validator } from '@felte/validator-zod';
 	import { profileSchema, skillSchema, type ProfileData, type Skill } from '$lib/schemas';
 	import { Button, Input, Label, Select } from '$lib/components/ui';
 
@@ -8,21 +10,12 @@
 	}
 
 	let { initialData }: Props = $props();
+	let success = $state(false);
 
-	function zodValidator<T>(schema: { safeParse: (data: unknown) => { success: boolean; error?: { flatten: () => { fieldErrors: Record<string, string[]> } } } }) {
-		return (values: T) => {
-			const result = schema.safeParse(values);
-			if (result.success) return {};
-			return result.error?.flatten().fieldErrors ?? {};
-		};
-	}
-
+	// svelte-ignore state_referenced_locally
 	const { form, data, errors, isSubmitting, setFields } = createForm<ProfileData>({
 		initialValues: initialData,
-		validate: zodValidator(profileSchema),
-		onSubmit: async (values) => {
-			console.log('[Felte Client] Profile submitted:', values);
-		}
+		extend: [validator({ schema: profileSchema as any })]
 	});
 
 	let showModal = $state(false);
@@ -70,7 +63,22 @@
 	}
 </script>
 
-<form use:form class="space-y-4">
+<form
+	use:form
+	method="POST"
+	action="?/felte"
+	class="space-y-4"
+	use:enhance={() => {
+		return async ({ result }) => {
+			if (result.type === 'success' && result.data?.felteSuccess) {
+				success = true;
+			}
+		};
+	}}
+>
+	{#if success}
+		<div class="text-green-500 font-medium">Profile saved</div>
+	{/if}
 	<div class="space-y-2">
 		<Label for="felte-gender">Gender</Label>
 		<Select id="felte-gender" name="gender">
@@ -102,6 +110,8 @@
 		{:else}
 			<ul class="space-y-2">
 				{#each $data.skills as skill, i}
+					<input type="hidden" name="skills[{i}].name" value={skill.name} />
+					<input type="hidden" name="skills[{i}].level" value={skill.level} />
 					<li class="flex items-center justify-between border rounded p-2">
 						<div>
 							<span class="font-medium">{skill.name}</span>
@@ -126,7 +136,7 @@
 			</ul>
 		{/if}
 
-		{#if $errors.skills}
+		{#if typeof $errors.skills === 'string'}
 			<p class="text-sm text-destructive">{$errors.skills}</p>
 		{/if}
 	</div>
