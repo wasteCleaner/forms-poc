@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
+	import { validator } from '@felte/validator-zod';
+	import { enhance } from '$app/forms';
 	import { profileSchema, skillSchema, type ProfileData, type Skill } from '$lib/schemas';
 	import { Button, Input, Label, Select } from '$lib/components/ui';
 
@@ -9,20 +11,10 @@
 
 	let { initialData }: Props = $props();
 
-	function zodValidator<T>(schema: { safeParse: (data: unknown) => { success: boolean; error?: { flatten: () => { fieldErrors: Record<string, string[]> } } } }) {
-		return (values: T) => {
-			const result = schema.safeParse(values);
-			if (result.success) return {};
-			return result.error?.flatten().fieldErrors ?? {};
-		};
-	}
-
+	// svelte-ignore state_referenced_locally
 	const { form, data, errors, isSubmitting, setFields } = createForm<ProfileData>({
 		initialValues: initialData,
-		validate: zodValidator(profileSchema),
-		onSubmit: async (values) => {
-			console.log('[Felte Client] Profile submitted:', values);
-		}
+		validate: validator({ schema: profileSchema as any })
 	});
 
 	let showModal = $state(false);
@@ -70,7 +62,7 @@
 	}
 </script>
 
-<form use:form class="space-y-4">
+<form method="POST" action="?/felte" use:enhance use:form class="space-y-4">
 	<div class="space-y-2">
 		<Label for="felte-gender">Gender</Label>
 		<Select id="felte-gender" name="gender">
@@ -90,6 +82,8 @@
 			<p class="text-sm text-destructive">{$errors.age[0]}</p>
 		{/if}
 	</div>
+
+	<input type="hidden" name="skills-json" value={JSON.stringify($data.skills)} />
 
 	<div class="space-y-2">
 		<div class="flex items-center justify-between">
@@ -127,7 +121,11 @@
 		{/if}
 
 		{#if $errors.skills}
-			<p class="text-sm text-destructive">{$errors.skills}</p>
+			{#if typeof $errors.skills === 'string'}
+				<p class="text-sm text-destructive">{$errors.skills}</p>
+			{:else}
+				<p class="text-sm text-destructive">Invalid skills configuration</p>
+			{/if}
 		{/if}
 	</div>
 

@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, fail } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
+import { zod } from 'sveltekit-superforms/adapters';
 import { profileSchema } from '$lib/schemas';
 
 const initialData = {
@@ -13,7 +13,7 @@ const initialData = {
 };
 
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(initialData, zod4(profileSchema));
+	const form = await superValidate(initialData, zod(profileSchema));
 	return {
 		form,
 		initialData
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	superforms: async ({ request }) => {
-		const form = await superValidate(request, zod4(profileSchema));
+		const form = await superValidate(request, zod(profileSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });
@@ -34,13 +34,21 @@ export const actions: Actions = {
 
 	felte: async ({ request }) => {
 		const formData = await request.formData();
-		const json = formData.get('__felte_data__') as string;
+		const skillsJson = formData.get('skills-json') as string;
+		let skills = [];
 
-		if (!json) {
-			return fail(400, { felteErrors: { _: ['Invalid form data'] } });
+		try {
+			skills = skillsJson ? JSON.parse(skillsJson) : [];
+		} catch (e) {
+			return fail(400, { felteErrors: { skills: ['Invalid skills data'] } });
 		}
 
-		const data = JSON.parse(json);
+		const data = {
+			gender: formData.get('gender'),
+			age: formData.get('age'),
+			skills
+		};
+
 		const result = profileSchema.safeParse(data);
 
 		if (!result.success) {

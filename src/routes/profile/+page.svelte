@@ -11,11 +11,11 @@
 </script>
 
 <div class="grid grid-cols-2 min-h-[calc(100vh-65px)]">
-	<div class="border-r p-6">
+	<div class="border-r p-6" data-testid="superforms-container">
 		<h2 class="text-lg font-semibold mb-4">Superforms</h2>
 		<SuperformsProfile data={data.form} />
 	</div>
-	<div class="p-6">
+	<div class="p-6" data-testid="felte-container">
 		<h2 class="text-lg font-semibold mb-4">Felte</h2>
 		<FelteProfile initialData={data.initialData} />
 	</div>
