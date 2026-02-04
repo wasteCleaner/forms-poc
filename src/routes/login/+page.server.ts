@@ -1,16 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, fail } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
+import { zod } from 'sveltekit-superforms/adapters';
 import { loginSchema } from '$lib/schemas';
 
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(zod4(loginSchema));
+	const form = await superValidate(zod(loginSchema));
 	return { form };
 };
 
 export const actions: Actions = {
 	superforms: async ({ request }) => {
-		const form = await superValidate(request, zod4(loginSchema));
+		const form = await superValidate(request, zod(loginSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });
