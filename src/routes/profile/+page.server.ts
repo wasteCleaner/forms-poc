@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, fail } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
-import { profileSchema } from '$lib/schemas';
+import { zod } from 'sveltekit-superforms/adapters';
+import { profileSchema, type ProfileData } from '$lib/schemas';
 
 const initialData = {
 	gender: 'male' as const,
@@ -13,7 +13,7 @@ const initialData = {
 };
 
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(initialData, zod4(profileSchema));
+	const form = await superValidate(initialData, zod(profileSchema as any) as any) as unknown as import('sveltekit-superforms').SuperValidated<ProfileData>;
 	return {
 		form,
 		initialData
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	superforms: async ({ request }) => {
-		const form = await superValidate(request, zod4(profileSchema));
+		const form = await superValidate(request, zod(profileSchema as any) as any) as unknown as import('sveltekit-superforms').SuperValidated<ProfileData>;
 
 		if (!form.valid) {
 			return fail(400, { form });
