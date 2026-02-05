@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createForm } from 'felte';
+	import { validator } from '@felte/validator-zod';
 	import { profileSchema, skillSchema, type ProfileData, type Skill } from '$lib/schemas';
 	import { Button, Input, Label, Select } from '$lib/components/ui';
 
@@ -9,17 +10,10 @@
 
 	let { initialData }: Props = $props();
 
-	function zodValidator<T>(schema: { safeParse: (data: unknown) => { success: boolean; error?: { flatten: () => { fieldErrors: Record<string, string[]> } } } }) {
-		return (values: T) => {
-			const result = schema.safeParse(values);
-			if (result.success) return {};
-			return result.error?.flatten().fieldErrors ?? {};
-		};
-	}
-
+	// svelte-ignore state_referenced_locally
 	const { form, data, errors, isSubmitting, setFields } = createForm<ProfileData>({
 		initialValues: initialData,
-		validate: zodValidator(profileSchema),
+		extend: validator({ schema: profileSchema }),
 		onSubmit: async (values) => {
 			console.log('[Felte Client] Profile submitted:', values);
 		}
