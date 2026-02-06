@@ -1,18 +1,11 @@
 <script lang="ts">
 	import { createForm } from 'felte';
+	import { validator } from '@felte/validator-zod';
 	import { loginSchema, type LoginData } from '$lib/schemas';
 	import { Button, Input, Label } from '$lib/components/ui';
 
-	function zodValidator<T>(schema: { safeParse: (data: unknown) => { success: boolean; error?: { flatten: () => { fieldErrors: Record<string, string[]> } } } }) {
-		return (values: T) => {
-			const result = schema.safeParse(values);
-			if (result.success) return {};
-			return result.error?.flatten().fieldErrors ?? {};
-		};
-	}
-
 	const { form, errors, isSubmitting } = createForm<LoginData>({
-		validate: zodValidator(loginSchema),
+		extend: validator({ schema: loginSchema as any }),
 		onSubmit: async (values) => {
 			console.log('[Felte Client] Login submitted:', values);
 		}
