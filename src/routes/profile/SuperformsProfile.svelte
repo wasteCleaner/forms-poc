@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { profileSchema, skillSchema, type ProfileData, type Skill } from '$lib/schemas';
 	import { Button, Input, Label, Select } from '$lib/components/ui';
 
@@ -11,8 +11,9 @@
 
 	let { data }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	const { form, errors, enhance, submitting } = superForm(data, {
-		validators: zod4Client(profileSchema),
+		validators: zodClient(profileSchema as any),
 		dataType: 'json'
 	});
 
