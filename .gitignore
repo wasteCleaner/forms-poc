@@ -29,3 +29,6 @@ storybook-static
 .vscode
 .cursor
 .claude
+/scripts
+CLAUDE.md
+/plans

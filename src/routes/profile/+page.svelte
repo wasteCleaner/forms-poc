@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import SuperformsProfile from './SuperformsProfile.svelte';
-	import FelteProfile from './FelteProfile.svelte';
+	import TanstackProfile from './TanstackProfile.svelte';
 
 	interface Props {
 		data: PageData;
@@ -16,7 +16,7 @@
 		<SuperformsProfile data={data.form} />
 	</div>
 	<div class="p-6">
-		<h2 class="text-lg font-semibold mb-4">Felte</h2>
-		<FelteProfile initialData={data.initialData} />
+		<h2 class="text-lg font-semibold mb-4">TanStack Form</h2>
+		<TanstackProfile initialData={data.initialData} />
 	</div>
 </div>

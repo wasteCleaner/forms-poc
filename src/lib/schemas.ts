@@ -12,8 +12,8 @@ export const skillSchema = z.object({
 
 export const profileSchema = z.object({
 	gender: z.enum(['male', 'female', 'other']),
-	age: z.coerce.number().min(0).max(120),
-	skills: z.array(skillSchema).default([])
+	age: z.number().min(0).max(120),
+	skills: z.array(skillSchema)
 });
 
 // Types inferred from schemas

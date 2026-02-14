@@ -5,8 +5,8 @@
 <div class="max-w-2xl mx-auto p-8">
 	<h1 class="text-3xl font-bold mb-4">Forms POC</h1>
 	<p class="text-muted mb-6">
-		Comparing <strong>sveltekit-superforms</strong> and <strong>felte</strong> form libraries for
-		SvelteKit.
+		Comparing <strong>sveltekit-superforms</strong> and <strong>TanStack Form</strong> form libraries
+		for SvelteKit.
 	</p>
 
 	<div class="space-y-4">
