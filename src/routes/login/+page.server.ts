@@ -20,7 +20,7 @@ export const actions: Actions = {
 		return { form, success: true };
 	},
 
-	felte: async ({ request }) => {
+	tanstack: async ({ request }) => {
 		const formData = await request.formData();
 		const data = {
 			email: formData.get('email') as string,
@@ -31,12 +31,12 @@ export const actions: Actions = {
 
 		if (!result.success) {
 			return fail(400, {
-				felteErrors: result.error.flatten().fieldErrors,
-				felteData: data
+				tanstackErrors: result.error.flatten().fieldErrors,
+				tanstackData: data
 			});
 		}
 
-		console.log('[Felte] Login submitted:', result.data);
-		return { felteSuccess: true };
+		console.log('[TanStack Form] Login submitted:', result.data);
+		return { tanstackSuccess: true };
 	}
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import SuperformsLogin from './SuperformsLogin.svelte';
-	import FelteLogin from './FelteLogin.svelte';
+	import TanstackLogin from './TanstackLogin.svelte';
 
 	interface Props {
 		data: PageData;
@@ -16,7 +16,7 @@
 		<SuperformsLogin data={data.form} />
 	</div>
 	<div class="p-6">
-		<h2 class="text-lg font-semibold mb-4">Felte</h2>
-		<FelteLogin />
+		<h2 class="text-lg font-semibold mb-4">TanStack Form</h2>
+		<TanstackLogin />
 	</div>
 </div>

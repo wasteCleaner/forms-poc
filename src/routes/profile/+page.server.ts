@@ -32,25 +32,24 @@ export const actions: Actions = {
 		return { form, success: true };
 	},
 
-	felte: async ({ request }) => {
+	tanstack: async ({ request }) => {
 		const formData = await request.formData();
-		const json = formData.get('__felte_data__') as string;
+		const data = {
+			gender: formData.get('gender') as string,
+			age: Number(formData.get('age')),
+			skills: JSON.parse(formData.get('skills') as string || '[]')
+		};
 
-		if (!json) {
-			return fail(400, { felteErrors: { _: ['Invalid form data'] } });
-		}
-
-		const data = JSON.parse(json);
 		const result = profileSchema.safeParse(data);
 
 		if (!result.success) {
 			return fail(400, {
-				felteErrors: result.error.flatten().fieldErrors,
-				felteData: data
+				tanstackErrors: result.error.flatten().fieldErrors,
+				tanstackData: data
 			});
 		}
 
-		console.log('[Felte] Profile submitted:', result.data);
-		return { felteSuccess: true };
+		console.log('[TanStack Form] Profile submitted:', result.data);
+		return { tanstackSuccess: true };
 	}
 };
