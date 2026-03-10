@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { superForm } from 'sveltekit-superforms';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { wizardSchema, type WizardData } from '$lib/schemas';
 	import { Button, Input, Label } from '$lib/components/ui';
 
@@ -12,12 +11,23 @@
 	let { data }: Props = $props();
 
 	const { form, errors, enhance, submitting } = superForm(data, {
-		validators: zod4Client(wizardSchema),
 		dataType: 'json'
 	});
 
 	let currentStep = $state(0);
 	const steps = ['Person Details', 'Address', 'Bank Details', 'Summary'];
+
+	const fieldStepMap: Record<string, number> = {
+		firstName: 0, lastName: 0, email: 0,
+		zipCode: 1, country: 1, street: 1, homeNumber: 1,
+		iban: 2, bic: 2
+	};
+
+	function stepHasErrors(stepIndex: number): boolean {
+		return Object.entries(fieldStepMap)
+			.filter(([, step]) => step === stepIndex)
+			.some(([field]) => $errors[field as keyof typeof $errors]);
+	}
 </script>
 
 <form method="POST" action="?/superforms" use:enhance class="space-y-4">
@@ -28,7 +38,8 @@
 				onclick={() => (currentStep = i)}
 				class="px-3 py-1 text-sm rounded {currentStep === i
 					? 'font-bold border-b-2 border-primary'
-					: 'text-muted-foreground hover:text-foreground'}"
+					: 'text-muted-foreground hover:text-foreground'}
+					{stepHasErrors(i) ? ' text-destructive' : ''}"
 			>
 				{i + 1}. {step}
 			</button>
@@ -115,15 +126,51 @@
 
 	{#if currentStep === 3}
 		<dl class="space-y-2 text-sm">
-			<div class="flex gap-2"><dt class="font-medium w-32">First Name:</dt><dd>{$form.firstName}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Last Name:</dt><dd>{$form.lastName}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Email:</dt><dd>{$form.email}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Zip Code:</dt><dd>{$form.zipCode}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Country:</dt><dd>{$form.country}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Street:</dt><dd>{$form.street}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">Home Number:</dt><dd>{$form.homeNumber}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">IBAN:</dt><dd>{$form.iban}</dd></div>
-			<div class="flex gap-2"><dt class="font-medium w-32">BIC:</dt><dd>{$form.bic}</dd></div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">First Name:</dt>
+				<dd class={$errors.firstName ? 'text-destructive' : ''}>{$form.firstName || '—'}</dd>
+				{#if $errors.firstName}<dd class="text-destructive text-xs ml-2">({$errors.firstName[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Last Name:</dt>
+				<dd class={$errors.lastName ? 'text-destructive' : ''}>{$form.lastName || '—'}</dd>
+				{#if $errors.lastName}<dd class="text-destructive text-xs ml-2">({$errors.lastName[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Email:</dt>
+				<dd class={$errors.email ? 'text-destructive' : ''}>{$form.email || '—'}</dd>
+				{#if $errors.email}<dd class="text-destructive text-xs ml-2">({$errors.email[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Zip Code:</dt>
+				<dd class={$errors.zipCode ? 'text-destructive' : ''}>{$form.zipCode || '—'}</dd>
+				{#if $errors.zipCode}<dd class="text-destructive text-xs ml-2">({$errors.zipCode[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Country:</dt>
+				<dd class={$errors.country ? 'text-destructive' : ''}>{$form.country || '—'}</dd>
+				{#if $errors.country}<dd class="text-destructive text-xs ml-2">({$errors.country[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Street:</dt>
+				<dd class={$errors.street ? 'text-destructive' : ''}>{$form.street || '—'}</dd>
+				{#if $errors.street}<dd class="text-destructive text-xs ml-2">({$errors.street[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">Home Number:</dt>
+				<dd class={$errors.homeNumber ? 'text-destructive' : ''}>{$form.homeNumber || '—'}</dd>
+				{#if $errors.homeNumber}<dd class="text-destructive text-xs ml-2">({$errors.homeNumber[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">IBAN:</dt>
+				<dd class={$errors.iban ? 'text-destructive' : ''}>{$form.iban || '—'}</dd>
+				{#if $errors.iban}<dd class="text-destructive text-xs ml-2">({$errors.iban[0]})</dd>{/if}
+			</div>
+			<div class="flex gap-2">
+				<dt class="font-medium w-32">BIC:</dt>
+				<dd class={$errors.bic ? 'text-destructive' : ''}>{$form.bic || '—'}</dd>
+				{#if $errors.bic}<dd class="text-destructive text-xs ml-2">({$errors.bic[0]})</dd>{/if}
+			</div>
 		</dl>
 	{/if}
 
