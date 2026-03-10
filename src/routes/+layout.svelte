@@ -15,6 +15,8 @@
 			<a href="/" class="font-semibold hover:underline">Home</a>
 			<a href="/login" class="hover:underline">Login</a>
 			<a href="/profile" class="hover:underline">Profile</a>
+			<a href="/nested" class="hover:underline">Nested</a>
+			<a href="/wizard" class="hover:underline">Wizard</a>
 		</div>
 	</nav>
 	{@render children()}
