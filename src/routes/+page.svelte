@@ -25,5 +25,21 @@
 				<Button>View Profile Demo</Button>
 			</a>
 		</div>
+
+		<div class="border rounded-lg p-4">
+			<h2 class="text-xl font-semibold mb-2">Nested Form</h2>
+			<p class="text-muted mb-3">Child form with independent validation syncing to parent</p>
+			<a href="/nested">
+				<Button>View Nested Demo</Button>
+			</a>
+		</div>
+
+		<div class="border rounded-lg p-4">
+			<h2 class="text-xl font-semibold mb-2">Wizard Form</h2>
+			<p class="text-muted mb-3">Multi-step wizard with free navigation</p>
+			<a href="/wizard">
+				<Button>View Wizard Demo</Button>
+			</a>
+		</div>
 	</div>
 </div>
